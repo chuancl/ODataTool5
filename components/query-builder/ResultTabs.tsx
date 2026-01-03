@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Chip, Tabs, Tab } from "@nextui-org/react";
 import { 
-    Table as TableIcon, Braces, Download, Copy, FileCode
+    Table as TableIcon, Braces, Download, Copy, FileCode, AlertCircle
 } from 'lucide-react';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
@@ -53,25 +53,36 @@ export const ResultTabs: React.FC<ResultTabsProps> = ({
     // --- JSON Editing Logic ---
     const [jsonValue, setJsonValue] = useState(rawJsonResult);
     const [isJsonFocused, setIsJsonFocused] = useState(false);
+    const [jsonError, setJsonError] = useState<string | null>(null);
 
     // Sync from prop ONLY when not focused (to prevent overwriting user typing with auto-formatted JSON)
     useEffect(() => {
         if (!isJsonFocused) {
             setJsonValue(rawJsonResult);
+            setJsonError(null);
         }
     }, [rawJsonResult, isJsonFocused]);
 
     const handleJsonEditorChange = (val: string) => {
         setJsonValue(val);
-        if (onJsonChange) {
+        // Clear error while typing
+        if (jsonError) setJsonError(null);
+    };
+
+    const handleJsonBlur = () => {
+        setIsJsonFocused(false);
+        if (enableJsonEdit && onJsonChange) {
             try {
-                const parsed = JSON.parse(val);
-                // Only sync back if it's a valid array (matching OData list structure)
+                const parsed = JSON.parse(jsonValue);
                 if (Array.isArray(parsed)) {
                     onJsonChange(parsed);
+                    setJsonError(null);
+                } else {
+                    // console.warn("JSON edit must be an array");
+                    // Optionally keep the error if strict array requirement is needed
                 }
-            } catch (e) {
-                // Ignore parse errors while typing
+            } catch (e: any) {
+                setJsonError("Invalid JSON");
             }
         }
     };
@@ -141,9 +152,16 @@ export const ResultTabs: React.FC<ResultTabsProps> = ({
                 {/* 2. JSON Preview */}
                 <div className="absolute inset-0 flex flex-col" style={{ display: activeTab === 'json' ? 'flex' : 'none', visibility: activeTab === 'json' ? 'visible' : 'hidden' }}>
                     <div className="p-2 border-b border-divider flex justify-between items-center shrink-0 bg-content2">
-                        <span className="text-xs font-bold px-2 text-warning-500">
-                            {enableJsonEdit ? "JSON 编辑 (Auto-Sync to Table)" : "JSON 响应结果"}
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold px-2 text-warning-500">
+                                {enableJsonEdit ? "JSON 编辑 (Blur to Sync)" : "JSON 响应结果"}
+                            </span>
+                            {jsonError && (
+                                <span className="text-xs text-danger flex items-center gap-1 bg-danger/10 px-2 rounded">
+                                    <AlertCircle size={12}/> {jsonError}
+                                </span>
+                            )}
+                        </div>
                         <div className="flex gap-1">
                             <Button isIconOnly size="sm" variant="light" onPress={() => downloadFile(jsonValue, 'result.json', 'json')} title="导出 JSON">
                                 <Download size={14} />
@@ -164,7 +182,7 @@ export const ResultTabs: React.FC<ResultTabsProps> = ({
                             editable={enableJsonEdit}
                             onChange={handleJsonEditorChange}
                             onFocus={() => setIsJsonFocused(true)}
-                            onBlur={() => setIsJsonFocused(false)}
+                            onBlur={handleJsonBlur}
                             basicSetup={{
                                 lineNumbers: true,
                                 foldGutter: true,
