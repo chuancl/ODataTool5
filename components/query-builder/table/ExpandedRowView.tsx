@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Chip } from "@nextui-org/chip";
 import { Tabs, Tab } from "@nextui-org/tabs";
@@ -13,13 +14,14 @@ interface ExpandedRowViewProps {
     schema?: ParsedSchema | null;
     parentEntityName?: string;
     onUpdate?: (updates: { item: any, changes: any }[]) => void; // Propagate Update
+    isEditing?: boolean; // Receive editing state from parent
 }
 
 // ----------------------------------------------------------------------
 // ExpandedRowView Component (Master-Detail Content)
 // ----------------------------------------------------------------------
 export const ExpandedRowView: React.FC<ExpandedRowViewProps> = ({ 
-    rowData, isDark, parentSelected, schema, parentEntityName, onUpdate 
+    rowData, isDark, parentSelected, schema, parentEntityName, onUpdate, isEditing 
 }) => {
     // 找出所有嵌套的属性（Expands），并尝试解析对应的实体类型
     const expandProps = useMemo(() => {
@@ -104,6 +106,7 @@ export const ExpandedRowView: React.FC<ExpandedRowViewProps> = ({
                                 schema={schema}
                                 entityName={prop.childEntityName}
                                 onUpdate={onUpdate} // Propagate update capability
+                                externalIsEditing={isEditing} // Propagate editing state
                             />
                         </Tab>
                     ))}

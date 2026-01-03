@@ -39,6 +39,7 @@ interface RecursiveDataTableProps {
     enableDelete?: boolean; // 新增：控制是否允许删除
     hideUpdateButton?: boolean; // 新增：在编辑模式下隐藏更新按钮 (用于 Mock Data)
     onDraftChange?: (draft: Record<number, Record<string, any>>) => void; // 新增：Draft 变更回调
+    externalIsEditing?: boolean; // 新增：外部控制的编辑状态
 }
 
 export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({ 
@@ -56,7 +57,8 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
     enableEdit = true,
     enableDelete = true,
     hideUpdateButton = false,
-    onDraftChange
+    onDraftChange,
+    externalIsEditing
 }) => {
     const tableContainerRef = useRef<HTMLDivElement>(null);
     const [containerWidth, setContainerWidth] = useState(() => {
@@ -92,6 +94,13 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
         onDraftChange?.({});
         setIsEditing(false);
     }, [data, parentSelected]);
+
+    // 同步外部编辑状态
+    useEffect(() => {
+        if (externalIsEditing !== undefined) {
+            setIsEditing(externalIsEditing);
+        }
+    }, [externalIsEditing]);
 
     // 监听容器宽度变化
     useEffect(() => {
@@ -441,7 +450,8 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
                                                 parentSelected={row.getIsSelected()} 
                                                 schema={schema} 
                                                 parentEntityName={entityName}
-                                                onUpdate={onUpdate} 
+                                                onUpdate={onUpdate}
+                                                isEditing={isEditing} // Pass current editing state to expanded view
                                             />
                                         </td>
                                     </tr>
