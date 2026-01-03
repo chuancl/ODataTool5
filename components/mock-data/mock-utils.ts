@@ -1,6 +1,7 @@
 
 import { faker } from '@faker-js/faker';
 import { EntityType, EntityProperty, ParsedSchema } from '@/utils/odata-helper';
+import { FAKER_DEFINITIONS } from './faker-definitions';
 
 export type MockStrategyType = 'faker' | 'custom.null' | 'custom.empty' | 'custom.undefined' | 'custom.increment';
 
@@ -22,101 +23,10 @@ export interface MockFieldConfig {
     path: string; property: EntityProperty; strategy: string; incrementConfig?: AutoIncrementConfig;
 }
 
-const mkFaker = (cat: string, mod: string, meth: string, lbl: string, types?: string[]): MockStrategy => ({
-    value: `${mod}.${meth}`, label: lbl, category: cat, type: 'faker', fakerModule: mod, fakerMethod: meth, allowedTypes: types
-});
-
-const STR = ['Edm.String'];
-const NUM = ['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.Byte', 'Edm.SByte', 'Edm.Decimal', 'Edm.Double', 'Edm.Single'];
-const DATE = ['Edm.DateTime', 'Edm.DateTimeOffset', 'Edm.String'];
-
-const FAKER_DEFINITIONS: MockStrategy[] = [
-    // Person & Phone
-    mkFaker('Person (人)', 'person', 'fullName', 'Full Name (全名)', STR),
-    mkFaker('Person (人)', 'person', 'firstName', 'First Name (名)', STR),
-    mkFaker('Person (人)', 'person', 'lastName', 'Last Name (姓)', STR),
-    mkFaker('Person (人)', 'person', 'jobTitle', 'Job Title (职位)', STR),
-    mkFaker('Person (人)', 'person', 'bio', 'Bio (简介)', STR),
-    mkFaker('Phone (电话)', 'phone', 'number', 'Phone Number (号码)', STR),
-
-    // Commerce & Company
-    mkFaker('Commerce (商业)', 'commerce', 'productName', 'Product Name (产品名)', STR),
-    mkFaker('Commerce (商业)', 'commerce', 'price', 'Price (价格)', ['Edm.Decimal', 'Edm.Double', 'Edm.String']),
-    mkFaker('Commerce (商业)', 'commerce', 'department', 'Department (部门)', STR),
-    mkFaker('Company (公司)', 'company', 'name', 'Company Name (公司名)', STR),
-    mkFaker('Company (公司)', 'company', 'catchPhrase', 'Catch Phrase (口号)', STR),
-
-    // Internet & System
-    mkFaker('Internet (互联网)', 'internet', 'email', 'Email (邮箱)', STR),
-    mkFaker('Internet (互联网)', 'internet', 'userName', 'Username (用户名)', STR),
-    mkFaker('Internet (互联网)', 'internet', 'url', 'URL (链接)', STR),
-    mkFaker('Internet (互联网)', 'internet', 'ipv4', 'IPv4', STR),
-    mkFaker('System (系统)', 'system', 'fileName', 'File Name (文件名)', STR),
-    mkFaker('System (系统)', 'system', 'mimeType', 'MIME Type', STR),
-    mkFaker('System (系统)', 'system', 'semver', 'Semver (版本号)', STR),
-
-    // Location
-    mkFaker('Location (地点)', 'location', 'city', 'City (城市)', STR),
-    mkFaker('Location (地点)', 'location', 'country', 'Country (国家)', STR),
-    mkFaker('Location (地点)', 'location', 'streetAddress', 'Street Address (街道)', STR),
-    mkFaker('Location (地点)', 'location', 'zipCode', 'Zip Code (邮编)', STR),
-
-    // Date
-    mkFaker('Date (日期)', 'date', 'past', 'Past Date (过去)', DATE),
-    mkFaker('Date (日期)', 'date', 'future', 'Future Date (未来)', DATE),
-    mkFaker('Date (日期)', 'date', 'recent', 'Recent Date (最近)', DATE),
-
-    // Numbers & Strings
-    mkFaker('Number (数字)', 'number', 'int', 'Integer (整数)', NUM),
-    mkFaker('Number (数字)', 'number', 'float', 'Float (浮点数)', ['Edm.Double', 'Edm.Single', 'Edm.Decimal']),
-    mkFaker('String (文本)', 'string', 'uuid', 'UUID / GUID', ['Edm.Guid', 'Edm.String']),
-    mkFaker('String (文本)', 'string', 'alphanumeric', 'Alphanumeric', STR),
-    
-    // Extended Modules
-    mkFaker('Animal (动物)', 'animal', 'type', 'Type (种类)', STR),
-    mkFaker('Animal (动物)', 'animal', 'dog', 'Dog (狗)', STR),
-    mkFaker('Animal (动物)', 'animal', 'cat', 'Cat (猫)', STR),
-    
-    mkFaker('Color (颜色)', 'color', 'human', 'Human Color (Red...)', STR),
-    mkFaker('Color (颜色)', 'color', 'rgb', 'RGB', STR),
-    
-    mkFaker('Database (数据库)', 'database', 'column', 'Column Name', STR),
-    mkFaker('Database (数据库)', 'database', 'type', 'Column Type', STR),
-    
-    mkFaker('Finance (金融)', 'finance', 'accountName', 'Account Name', STR),
-    mkFaker('Finance (金融)', 'finance', 'amount', 'Amount', ['Edm.Decimal', 'Edm.Double', 'Edm.String']),
-    mkFaker('Finance (金融)', 'finance', 'currencyName', 'Currency', STR),
-    
-    mkFaker('Hacker (黑客)', 'hacker', 'phrase', 'Phrase (短语)', STR),
-    mkFaker('Hacker (黑客)', 'hacker', 'noun', 'Noun (名词)', STR),
-    
-    mkFaker('Image (图像)', 'image', 'avatar', 'Avatar URL', STR),
-    mkFaker('Image (图像)', 'image', 'url', 'Image URL', STR),
-    
-    mkFaker('Lorem (文本)', 'lorem', 'word', 'Word', STR),
-    mkFaker('Lorem (文本)', 'lorem', 'sentence', 'Sentence', STR),
-    mkFaker('Lorem (文本)', 'lorem', 'paragraph', 'Paragraph', STR),
-    
-    mkFaker('Music (音乐)', 'music', 'genre', 'Genre (流派)', STR),
-    mkFaker('Music (音乐)', 'music', 'songName', 'Song Name (歌名)', STR),
-    
-    mkFaker('Science (科学)', 'science', 'chemicalElement', 'Element (元素)', STR),
-    mkFaker('Science (科学)', 'science', 'unit', 'Unit (单位)', STR),
-    
-    mkFaker('Vehicle (车辆)', 'vehicle', 'vehicle', 'Vehicle Name', STR),
-    mkFaker('Vehicle (车辆)', 'vehicle', 'model', 'Model', STR),
-    mkFaker('Vehicle (车辆)', 'vehicle', 'vin', 'VIN', STR),
-
-    // Book (Safe Check later)
-    mkFaker('Book (书籍)', 'book', 'title', 'Title (书名)', STR),
-    mkFaker('Book (书籍)', 'book', 'author', 'Author (作者)', STR),
-    mkFaker('Book (书籍)', 'book', 'genre', 'Genre (类别)', STR),
-];
-
 const CUSTOM_STRATEGIES: MockStrategy[] = [
     { value: 'custom.null', label: 'Null (空值)', category: 'Custom (自定义)', type: 'custom.null' },
-    { value: 'custom.empty', label: 'Empty String (空字符串)', category: 'Custom (自定义)', type: 'custom.empty', allowedTypes: STR },
-    { value: 'custom.increment', label: 'Auto Increment (自增序列)', category: 'Custom (自定义)', type: 'custom.increment', allowedTypes: [...NUM, 'Edm.String'] },
+    { value: 'custom.empty', label: 'Empty String (空字符串)', category: 'Custom (自定义)', type: 'custom.empty', allowedTypes: ['Edm.String'] },
+    { value: 'custom.increment', label: 'Auto Increment (自增序列)', category: 'Custom (自定义)', type: 'custom.increment', allowedTypes: ['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.Byte', 'Edm.SByte', 'Edm.Decimal', 'Edm.Double', 'Edm.Single', 'Edm.String'] },
 ];
 
 export const ALL_STRATEGIES = [...CUSTOM_STRATEGIES, ...FAKER_DEFINITIONS];
@@ -196,9 +106,6 @@ export const generateValue = (strategyValue: string, prop: EntityProperty, index
             if (module && typeof module[strategy.fakerMethod] === 'function') {
                 return enforceConstraints(module[strategy.fakerMethod](), prop);
             } else {
-                // Fallback for missing modules (e.g. 'book' in older faker versions)
-                if (strategy.fakerModule === 'book') return `Book ${strategy.fakerMethod} ${index}`;
-                if (strategy.fakerModule === 'music') return `Song ${index}`;
                 return `[Missing ${strategy.value}]`;
             }
         } catch (e) {

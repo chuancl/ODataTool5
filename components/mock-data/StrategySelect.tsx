@@ -1,11 +1,12 @@
 
 import React, { useMemo, useState } from 'react';
-import { Select, SelectItem, Chip } from "@nextui-org/react";
+import { Select, SelectItem, Chip, Tooltip } from "@nextui-org/react";
 import { ChevronRight, ChevronDown, AlertTriangle } from 'lucide-react';
 import { 
     ALL_STRATEGIES, 
     getGroupedStrategies, 
-    isStrategyCompatible 
+    isStrategyCompatible,
+    MockStrategy
 } from './mock-utils';
 
 interface StrategySelectProps {
@@ -23,11 +24,12 @@ interface FlatItem {
     isCompatible: boolean;
     level: number;
     isExpanded?: boolean;
+    strategy?: MockStrategy; // 为了获取 fakerModule/Method
 }
 
 export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange, odataType, label }) => {
-    // 管理展开的类别 (默认展开常用)
-    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['Custom (自定义)', 'Person (人)', 'Commerce (商业)'])); 
+    // 默认展开 Custom 和 Person，确保默认选项(如 Null/AutoIncrement) 可见
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['Custom (自定义)', 'Person (人物)'])); 
 
     const grouped = useMemo(() => getGroupedStrategies(), []);
     
@@ -35,7 +37,7 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
     const flatItems = useMemo(() => {
         const items: FlatItem[] = [];
         
-        // 排序 Categories
+        // 排序 Categories (Custom first, then alphabetical)
         const categories = Object.keys(grouped).sort((a, b) => {
             if (a.startsWith('Custom')) return -1;
             if (b.startsWith('Custom')) return 1;
@@ -44,18 +46,16 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
 
         categories.forEach(cat => {
             const isExpanded = expandedCategories.has(cat);
-            // 1. Category Header
             items.push({
                 key: `CAT_${cat}`,
                 type: 'category',
                 label: cat,
-                value: `CAT_${cat}`, // Dummy value
+                value: `CAT_${cat}`, 
                 isCompatible: true,
                 level: 0,
                 isExpanded
             });
 
-            // 2. Strategies (if expanded)
             if (isExpanded) {
                 grouped[cat].forEach(strat => {
                     items.push({
@@ -64,7 +64,8 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
                         label: strat.label,
                         value: strat.value,
                         isCompatible: isStrategyCompatible(strat.value, odataType),
-                        level: 1
+                        level: 1,
+                        strategy: strat
                     });
                 });
             }
@@ -76,7 +77,6 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
     const selectedStrategy = ALL_STRATEGIES.find(s => s.value === value);
     const isCurrentCompatible = selectedStrategy ? isStrategyCompatible(value, odataType) : true;
 
-    // 切换分类展开状态
     const toggleCategory = (catName: string) => {
         setExpandedCategories(prev => {
             const next = new Set(prev);
@@ -92,8 +92,6 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
             size="sm" 
             variant="faded" 
             selectedKeys={selectedStrategy ? [selectedStrategy.value] : []}
-            // 这里的 onSelectionChange 只处理实际策略的选中
-            // 分类的点击通过 onClick 拦截并阻止冒泡，不会触发 selectionChange
             onSelectionChange={(keys) => {
                 const k = Array.from(keys)[0] as string;
                 if (k && !k.startsWith('CAT_')) onChange(k);
@@ -115,18 +113,16 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
         >
             {(item) => {
                 if (item.type === 'category') {
-                    // 类别行：点击整行切换展开，且阻止冒泡以防止 Dropdown 关闭
                     return (
                         <SelectItem 
                             key={item.key} 
                             textValue={item.label}
                             className="font-bold text-default-600 bg-default-50 sticky top-0 z-10 p-0 rounded-none border-b border-divider/50 data-[hover=true]:bg-default-100 outline-none"
-                            isReadOnly // 标记为只读，避免 NextUI 处理为可选项
+                            isReadOnly
                         >
                             <div 
                                 className="flex items-center gap-2 w-full h-full py-2 px-3 cursor-pointer"
                                 onClick={(e) => {
-                                    // 核心修复：阻止事件冒泡到 Select 组件，防止菜单关闭
                                     e.preventDefault();
                                     e.stopPropagation();
                                     toggleCategory(item.label);
@@ -141,19 +137,32 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
                     );
                 }
                 
-                // 策略行：正常渲染，点击触发选择
+                // 构建 Tooltip 内容
+                const tooltipContent = item.strategy?.type === 'faker' 
+                    ? `faker.${item.strategy.fakerModule}.${item.strategy.fakerMethod}()`
+                    : (item.strategy?.type === 'custom.increment' 
+                        ? 'Auto-incrementing number/string (e.g. 1, 2, 3...)'
+                        : 'Fixed value logic');
+
                 return (
                     <SelectItem key={item.key} value={item.key} textValue={item.label}>
-                        <div className="flex justify-between items-center w-full gap-2 pl-6">
-                            <span className={`text-[11px] ${!item.isCompatible ? 'text-default-400 line-through decoration-default-300' : ''}`}>
-                                {item.label}
-                            </span>
-                            {!item.isCompatible && (
-                                <Chip size="sm" color="warning" variant="flat" className="h-4 text-[9px] px-1 min-w-min">
-                                    Type mismatch
-                                </Chip>
-                            )}
-                        </div>
+                         <Tooltip 
+                            content={<span className="font-mono text-[10px]">{tooltipContent}</span>} 
+                            placement="right" 
+                            delay={300}
+                            closeDelay={0}
+                        >
+                            <div className="flex justify-between items-center w-full gap-2 pl-6">
+                                <span className={`text-[11px] ${!item.isCompatible ? 'text-default-400 line-through decoration-default-300' : ''}`}>
+                                    {item.label}
+                                </span>
+                                {!item.isCompatible && (
+                                    <Chip size="sm" color="warning" variant="flat" className="h-4 text-[9px] px-1 min-w-min">
+                                        Type mismatch
+                                    </Chip>
+                                )}
+                            </div>
+                        </Tooltip>
                     </SelectItem>
                 );
             }}
