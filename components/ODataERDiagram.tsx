@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import ReactFlow, { 
   Controls, 
@@ -242,7 +243,8 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading }) => {
             markerStart: { type: MarkerType.ArrowClosed, color: e.color },
             markerEnd: { type: MarkerType.ArrowClosed, color: e.color },
             animated: false,
-            style: { stroke: e.color, strokeWidth: 1.5, opacity: 0.8 },
+            // Increase strokeWidth from 1.5 to 4.5 (3x)
+            style: { stroke: e.color, strokeWidth: 4.5, opacity: 0.8 },
             label: e.label,
             labelStyle: { fill: e.color, fontWeight: 700, fontSize: 10 },
             labelBgStyle: { fill: '#ffffff', fillOpacity: 0.7, rx: 4, ry: 4 },
@@ -298,7 +300,8 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading }) => {
           setEdges((eds) => eds.map(e => ({
               ...e, 
               animated: false, 
-              style: { stroke: e.data?.originalColor, strokeWidth: 1.5, opacity: 0.8 }, 
+              // Reset strokeWidth to 4.5
+              style: { stroke: e.data?.originalColor, strokeWidth: 4.5, opacity: 0.8 }, 
               markerStart: { type: MarkerType.ArrowClosed, color: e.data?.originalColor },
               markerEnd: { type: MarkerType.ArrowClosed, color: e.data?.originalColor },
               labelStyle: { ...e.labelStyle, fill: e.data?.originalColor, opacity: 1 },
@@ -331,7 +334,8 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading }) => {
               style: { 
                   ...e.style, 
                   stroke: color,
-                  strokeWidth: isVisible ? 2.5 : 1,
+                  // Highlighting width: increased to 6
+                  strokeWidth: isVisible ? 6 : 1,
                   opacity: isVisible ? 1 : 0.05, 
                   zIndex: isVisible ? 10 : 0
               },
