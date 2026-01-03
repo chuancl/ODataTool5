@@ -1,16 +1,16 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Button, Input, Card, CardBody, Select, SelectItem, ScrollShadow, SelectSection, Accordion, AccordionItem, Popover, PopoverTrigger, PopoverContent, Chip } from "@nextui-org/react";
+import { Button, Input, Card, CardBody, Select, SelectItem, ScrollShadow } from "@nextui-org/react";
 import { ODataVersion, ParsedSchema } from '@/utils/odata-helper';
-import { Sparkles, Settings2, RefreshCw, Plus, Trash2, AlertTriangle, Info } from 'lucide-react';
+import { Sparkles, Settings2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useEntityActions } from './query-builder/hooks/useEntityActions';
 import { CodeModal } from './query-builder/CodeModal';
 import { ResultTabs } from './query-builder/ResultTabs';
+import { StrategySelect } from './mock-data/StrategySelect';
 import { 
     flattenEntityProperties, 
     suggestStrategy, 
     generateValue, 
-    getGroupedStrategies,
     isStrategyCompatible,
     MockFieldConfig,
     AutoIncrementConfig
@@ -186,11 +186,6 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
       setCurrentDraft({});
   };
 
-  // --- UI Components ---
-  
-  // 按类别分组策略 (Memoized to avoid recalc)
-  const groupedStrategies = useMemo(() => getGroupedStrategies(), []);
-
   return (
     <div className="flex flex-col gap-4 h-full relative">
       {/* 顶部控制栏 */}
@@ -255,47 +250,13 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
                                         </div>
                                     </div>
                                     
-                                    <Select 
-                                        aria-label={fp.path}
-                                        size="sm" 
-                                        variant="faded" 
-                                        selectedKeys={[conf.strategy]}
-                                        onChange={(e) => updateConfig(fp.path, { strategy: e.target.value })}
-                                        classNames={{ 
-                                            trigger: "h-8 min-h-8 px-2", 
-                                            value: `text-[11px] ${!isCompatible ? 'text-warning-600 font-medium' : ''}` 
-                                        }}
-                                        renderValue={(items) => {
-                                            return items.map(item => (
-                                                <div key={item.key} className="flex items-center gap-1">
-                                                    {!isCompatible && <AlertTriangle size={12} className="text-warning" />}
-                                                    <span>{item.textValue}</span>
-                                                </div>
-                                            ));
-                                        }}
-                                    >
-                                        {Object.entries(groupedStrategies).map(([category, items]) => (
-                                            <SelectSection key={category} title={category} classNames={{ heading: "text-[10px] font-bold text-primary/80 uppercase" }}>
-                                                {items.map(opt => {
-                                                    const itemCompatible = isStrategyCompatible(opt.value, fp.property.type);
-                                                    return (
-                                                        <SelectItem key={opt.value} value={opt.value} textValue={opt.label}>
-                                                            <div className="flex justify-between items-center w-full gap-2">
-                                                                <span className={`text-[11px] ${!itemCompatible ? 'text-default-400 line-through decoration-default-300' : ''}`}>
-                                                                    {opt.label}
-                                                                </span>
-                                                                {!itemCompatible && (
-                                                                    <Chip size="sm" color="warning" variant="flat" className="h-4 text-[9px] px-1 min-w-min">
-                                                                        Type mismatch
-                                                                    </Chip>
-                                                                )}
-                                                            </div>
-                                                        </SelectItem>
-                                                    );
-                                                })}
-                                            </SelectSection>
-                                        ))}
-                                    </Select>
+                                    {/* New Strategy Selector Component */}
+                                    <StrategySelect 
+                                        value={conf.strategy}
+                                        odataType={fp.property.type}
+                                        onChange={(val) => updateConfig(fp.path, { strategy: val })}
+                                        label={fp.path}
+                                    />
 
                                     {/* Auto-Increment Settings - Always visible for 'custom.increment' */}
                                     {conf.strategy === 'custom.increment' && (

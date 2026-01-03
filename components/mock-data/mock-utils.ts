@@ -39,52 +39,152 @@ export interface MockFieldConfig {
 // --- 1. 策略定义 (Faker + Custom) ---
 
 const COMMON_STRATEGIES: MockStrategy[] = [
-    { value: 'custom.null', label: 'Null (空值)', category: 'Custom', type: 'custom.null' },
-    { value: 'custom.empty', label: 'Empty String ""', category: 'Custom', type: 'custom.empty', allowedTypes: ['Edm.String'] },
-    // { value: 'custom.undefined', label: 'Undefined (Skip)', category: 'Custom', type: 'custom.undefined' },
-    { value: 'custom.increment', label: 'Auto Increment (自增)', category: 'Custom', type: 'custom.increment', allowedTypes: ['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.String'] },
+    { value: 'custom.null', label: 'Null (空值)', category: 'Custom (自定义)', type: 'custom.null' },
+    { value: 'custom.empty', label: 'Empty String (空字符串)', category: 'Custom (自定义)', type: 'custom.empty', allowedTypes: ['Edm.String'] },
+    { value: 'custom.increment', label: 'Auto Increment (自增序列)', category: 'Custom (自定义)', type: 'custom.increment', allowedTypes: ['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.String', 'Edm.Byte'] },
 ];
 
-// 定义支持的 Faker 方法 (按类别分组)
+// 辅助构建 Faker 策略
+const mkFaker = (cat: string, mod: string, meth: string, lbl: string, types?: string[]): MockStrategy => ({
+    value: `${mod}.${meth}`,
+    label: lbl,
+    category: cat,
+    type: 'faker',
+    fakerModule: mod,
+    fakerMethod: meth,
+    allowedTypes: types
+});
+
+const STRING_ONLY = ['Edm.String'];
+const NUMBER_ONLY = ['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.Byte', 'Edm.SByte', 'Edm.Decimal', 'Edm.Double', 'Edm.Single'];
+const DATE_ONLY = ['Edm.DateTime', 'Edm.DateTimeOffset', 'Edm.String'];
+
+// 定义支持的 Faker 方法 (全面覆盖)
 const FAKER_DEFINITIONS: MockStrategy[] = [
-    // Person
-    { value: 'person.fullName', label: 'Full Name', category: 'Person', type: 'faker', fakerModule: 'person', fakerMethod: 'fullName', allowedTypes: ['Edm.String'] },
-    { value: 'person.firstName', label: 'First Name', category: 'Person', type: 'faker', fakerModule: 'person', fakerMethod: 'firstName', allowedTypes: ['Edm.String'] },
-    { value: 'person.lastName', label: 'Last Name', category: 'Person', type: 'faker', fakerModule: 'person', fakerMethod: 'lastName', allowedTypes: ['Edm.String'] },
-    { value: 'person.jobTitle', label: 'Job Title', category: 'Person', type: 'faker', fakerModule: 'person', fakerMethod: 'jobTitle', allowedTypes: ['Edm.String'] },
-    
-    // Commerce
-    { value: 'commerce.productName', label: 'Product Name', category: 'Commerce', type: 'faker', fakerModule: 'commerce', fakerMethod: 'productName', allowedTypes: ['Edm.String'] },
-    { value: 'commerce.price', label: 'Price', category: 'Commerce', type: 'faker', fakerModule: 'commerce', fakerMethod: 'price', allowedTypes: ['Edm.Decimal', 'Edm.Double', 'Edm.Single', 'Edm.String'] },
-    { value: 'commerce.department', label: 'Department', category: 'Commerce', type: 'faker', fakerModule: 'commerce', fakerMethod: 'department', allowedTypes: ['Edm.String'] },
-    
-    // Internet
-    { value: 'internet.email', label: 'Email', category: 'Internet', type: 'faker', fakerModule: 'internet', fakerMethod: 'email', allowedTypes: ['Edm.String'] },
-    { value: 'internet.userName', label: 'Username', category: 'Internet', type: 'faker', fakerModule: 'internet', fakerMethod: 'userName', allowedTypes: ['Edm.String'] },
-    { value: 'internet.url', label: 'URL', category: 'Internet', type: 'faker', fakerModule: 'internet', fakerMethod: 'url', allowedTypes: ['Edm.String'] },
-    
-    // Location
-    { value: 'location.city', label: 'City', category: 'Location', type: 'faker', fakerModule: 'location', fakerMethod: 'city', allowedTypes: ['Edm.String'] },
-    { value: 'location.country', label: 'Country', category: 'Location', type: 'faker', fakerModule: 'location', fakerMethod: 'country', allowedTypes: ['Edm.String'] },
-    { value: 'location.streetAddress', label: 'Street Address', category: 'Location', type: 'faker', fakerModule: 'location', fakerMethod: 'streetAddress', allowedTypes: ['Edm.String'] },
-    { value: 'location.zipCode', label: 'Zip Code', category: 'Location', type: 'faker', fakerModule: 'location', fakerMethod: 'zipCode', allowedTypes: ['Edm.String'] },
+    // Person 人
+    mkFaker('Person (人)', 'person', 'fullName', 'Full Name (全名)', STRING_ONLY),
+    mkFaker('Person (人)', 'person', 'firstName', 'First Name (名)', STRING_ONLY),
+    mkFaker('Person (人)', 'person', 'lastName', 'Last Name (姓)', STRING_ONLY),
+    mkFaker('Person (人)', 'person', 'middleName', 'Middle Name (中间名)', STRING_ONLY),
+    mkFaker('Person (人)', 'person', 'jobTitle', 'Job Title (职位)', STRING_ONLY),
+    mkFaker('Person (人)', 'person', 'gender', 'Gender (性别)', STRING_ONLY),
+    mkFaker('Person (人)', 'person', 'bio', 'Bio (简介)', STRING_ONLY),
 
-    // Date
-    { value: 'date.past', label: 'Date (Past)', category: 'Date', type: 'faker', fakerModule: 'date', fakerMethod: 'past', allowedTypes: ['Edm.DateTime', 'Edm.DateTimeOffset', 'Edm.String'] },
-    { value: 'date.future', label: 'Date (Future)', category: 'Date', type: 'faker', fakerModule: 'date', fakerMethod: 'future', allowedTypes: ['Edm.DateTime', 'Edm.DateTimeOffset', 'Edm.String'] },
-    { value: 'date.recent', label: 'Date (Recent)', category: 'Date', type: 'faker', fakerModule: 'date', fakerMethod: 'recent', allowedTypes: ['Edm.DateTime', 'Edm.DateTimeOffset', 'Edm.String'] },
+    // Commerce 商业
+    mkFaker('Commerce (商业)', 'commerce', 'department', 'Department (部门)', STRING_ONLY),
+    mkFaker('Commerce (商业)', 'commerce', 'productName', 'Product Name (产品名)', STRING_ONLY),
+    mkFaker('Commerce (商业)', 'commerce', 'price', 'Price (价格)', ['Edm.Decimal', 'Edm.Double', 'Edm.Single', 'Edm.String']),
+    mkFaker('Commerce (商业)', 'commerce', 'productDescription', 'Product Desc (描述)', STRING_ONLY),
+    mkFaker('Commerce (商业)', 'commerce', 'productMaterial', 'Material (材质)', STRING_ONLY),
 
-    // Numbers & IDs
-    { value: 'number.int', label: 'Integer', category: 'Number/ID', type: 'faker', fakerModule: 'number', fakerMethod: 'int', allowedTypes: ['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.Byte', 'Edm.SByte'] },
-    { value: 'string.uuid', label: 'UUID / GUID', category: 'Number/ID', type: 'faker', fakerModule: 'string', fakerMethod: 'uuid', allowedTypes: ['Edm.Guid', 'Edm.String'] },
-    
-    // Text
-    { value: 'lorem.word', label: 'Word', category: 'Text', type: 'faker', fakerModule: 'lorem', fakerMethod: 'word', allowedTypes: ['Edm.String'] },
-    { value: 'lorem.sentence', label: 'Sentence', category: 'Text', type: 'faker', fakerModule: 'lorem', fakerMethod: 'sentence', allowedTypes: ['Edm.String'] },
-    { value: 'lorem.paragraph', label: 'Paragraph', category: 'Text', type: 'faker', fakerModule: 'lorem', fakerMethod: 'paragraph', allowedTypes: ['Edm.String'] },
+    // Company 公司
+    mkFaker('Company (公司)', 'company', 'name', 'Company Name (公司名)', STRING_ONLY),
+    mkFaker('Company (公司)', 'company', 'catchPhrase', 'Catch Phrase (口号)', STRING_ONLY),
+    mkFaker('Company (公司)', 'company', 'buzzPhrase', 'Buzz Phrase (热词)', STRING_ONLY),
+
+    // Internet 互联网
+    mkFaker('Internet (互联网)', 'internet', 'email', 'Email (邮箱)', STRING_ONLY),
+    mkFaker('Internet (互联网)', 'internet', 'userName', 'Username (用户名)', STRING_ONLY),
+    mkFaker('Internet (互联网)', 'internet', 'domainName', 'Domain (域名)', STRING_ONLY),
+    mkFaker('Internet (互联网)', 'internet', 'url', 'URL (链接)', STRING_ONLY),
+    mkFaker('Internet (互联网)', 'internet', 'ipv4', 'IPv4', STRING_ONLY),
+    mkFaker('Internet (互联网)', 'internet', 'userAgent', 'User Agent', STRING_ONLY),
+    mkFaker('Internet (互联网)', 'internet', 'mac', 'MAC Address', STRING_ONLY),
+    mkFaker('Internet (互联网)', 'internet', 'password', 'Password (密码)', STRING_ONLY),
+
+    // Location 地点
+    mkFaker('Location (地点)', 'location', 'city', 'City (城市)', STRING_ONLY),
+    mkFaker('Location (地点)', 'location', 'country', 'Country (国家)', STRING_ONLY),
+    mkFaker('Location (地点)', 'location', 'streetAddress', 'Street Address (街道)', STRING_ONLY),
+    mkFaker('Location (地点)', 'location', 'zipCode', 'Zip Code (邮编)', STRING_ONLY),
+    mkFaker('Location (地点)', 'location', 'state', 'State (州/省)', STRING_ONLY),
+    mkFaker('Location (地点)', 'location', 'latitude', 'Latitude (纬度)', ['Edm.Double', 'Edm.Single', 'Edm.String']),
+    mkFaker('Location (地点)', 'location', 'longitude', 'Longitude (经度)', ['Edm.Double', 'Edm.Single', 'Edm.String']),
+
+    // Date 日期
+    mkFaker('Date (日期)', 'date', 'past', 'Past Date (过去)', DATE_ONLY),
+    mkFaker('Date (日期)', 'date', 'future', 'Future Date (未来)', DATE_ONLY),
+    mkFaker('Date (日期)', 'date', 'recent', 'Recent Date (最近)', DATE_ONLY),
+    mkFaker('Date (日期)', 'date', 'month', 'Month (月份)', STRING_ONLY),
+    mkFaker('Date (日期)', 'date', 'weekday', 'Weekday (星期)', STRING_ONLY),
+
+    // Phone 电话
+    mkFaker('Phone (电话)', 'phone', 'number', 'Phone Number (号码)', STRING_ONLY),
+    mkFaker('Phone (电话)', 'phone', 'imei', 'IMEI', STRING_ONLY),
+
+    // Finance 金融
+    mkFaker('Finance (金融)', 'finance', 'accountName', 'Account Name (账户名)', STRING_ONLY),
+    mkFaker('Finance (金融)', 'finance', 'amount', 'Amount (金额)', ['Edm.Decimal', 'Edm.Double', 'Edm.String']),
+    mkFaker('Finance (金融)', 'finance', 'currencyCode', 'Currency Code (货币代码)', STRING_ONLY),
+    mkFaker('Finance (金融)', 'finance', 'currencyName', 'Currency Name (货币名)', STRING_ONLY),
+    mkFaker('Finance (金融)', 'finance', 'bitcoinAddress', 'Bitcoin Addr (比特币地址)', STRING_ONLY),
+    mkFaker('Finance (金融)', 'finance', 'creditCardNumber', 'Credit Card (信用卡)', STRING_ONLY),
+
+    // Animal 动物
+    mkFaker('Animal (动物)', 'animal', 'type', 'Type (种类)', STRING_ONLY),
+    mkFaker('Animal (动物)', 'animal', 'dog', 'Dog (狗)', STRING_ONLY),
+    mkFaker('Animal (动物)', 'animal', 'cat', 'Cat (猫)', STRING_ONLY),
+    mkFaker('Animal (动物)', 'animal', 'snake', 'Snake (蛇)', STRING_ONLY),
+    mkFaker('Animal (动物)', 'animal', 'bear', 'Bear (熊)', STRING_ONLY),
+    mkFaker('Animal (动物)', 'animal', 'lion', 'Lion (狮子)', STRING_ONLY),
+
+    // Color 颜色
+    mkFaker('Color (颜色)', 'color', 'human', 'Human Color (Red, Blue...)', STRING_ONLY),
+    mkFaker('Color (颜色)', 'color', 'rgb', 'RGB', STRING_ONLY),
+    mkFaker('Color (颜色)', 'color', 'hex', 'Hex (#FFFFFF)', STRING_ONLY),
+
+    // Vehicle 车辆
+    mkFaker('Vehicle (车辆)', 'vehicle', 'vehicle', 'Vehicle Name (车名)', STRING_ONLY),
+    mkFaker('Vehicle (车辆)', 'vehicle', 'manufacturer', 'Manufacturer (厂商)', STRING_ONLY),
+    mkFaker('Vehicle (车辆)', 'vehicle', 'model', 'Model (型号)', STRING_ONLY),
+    mkFaker('Vehicle (车辆)', 'vehicle', 'type', 'Type (类型)', STRING_ONLY),
+    mkFaker('Vehicle (车辆)', 'vehicle', 'fuel', 'Fuel (燃料)', STRING_ONLY),
+    mkFaker('Vehicle (车辆)', 'vehicle', 'vin', 'VIN', STRING_ONLY),
+
+    // System 系统
+    mkFaker('System (系统)', 'system', 'fileName', 'File Name (文件名)', STRING_ONLY),
+    mkFaker('System (系统)', 'system', 'commonFileName', 'Common File (常用文件)', STRING_ONLY),
+    mkFaker('System (系统)', 'system', 'mimeType', 'MIME Type', STRING_ONLY),
+    mkFaker('System (系统)', 'system', 'fileType', 'File Type (扩展名)', STRING_ONLY),
+    mkFaker('System (系统)', 'system', 'semver', 'Semver (版本号)', STRING_ONLY),
+
+    // Science 科学
+    mkFaker('Science (科学)', 'science', 'chemicalElement', 'Element (元素)', STRING_ONLY),
+    mkFaker('Science (科学)', 'science', 'unit', 'Unit (单位)', STRING_ONLY),
+
+    // Hacker 黑客
+    mkFaker('Hacker (黑客)', 'hacker', 'abbreviation', 'Abbreviation (缩写)', STRING_ONLY),
+    mkFaker('Hacker (黑客)', 'hacker', 'adjective', 'Adjective (形容词)', STRING_ONLY),
+    mkFaker('Hacker (黑客)', 'hacker', 'noun', 'Noun (名词)', STRING_ONLY),
+    mkFaker('Hacker (黑客)', 'hacker', 'verb', 'Verb (动词)', STRING_ONLY),
+    mkFaker('Hacker (黑客)', 'hacker', 'phrase', 'Phrase (短语)', STRING_ONLY),
+
+    // Word 单词 & Lorem
+    mkFaker('Word (单词)', 'word', 'adjective', 'Adjective', STRING_ONLY),
+    mkFaker('Word (单词)', 'word', 'noun', 'Noun', STRING_ONLY),
+    mkFaker('Lorem (文本)', 'lorem', 'word', 'Word', STRING_ONLY),
+    mkFaker('Lorem (文本)', 'lorem', 'sentence', 'Sentence (句子)', STRING_ONLY),
+    mkFaker('Lorem (文本)', 'lorem', 'paragraph', 'Paragraph (段落)', STRING_ONLY),
+    mkFaker('Lorem (文本)', 'lorem', 'slug', 'Slug', STRING_ONLY),
+
+    // Number 数字
+    mkFaker('Number (数字)', 'number', 'int', 'Integer (整数)', NUMBER_ONLY),
+    mkFaker('Number (数字)', 'number', 'float', 'Float (浮点数)', ['Edm.Double', 'Edm.Single', 'Edm.Decimal']),
+    mkFaker('Number (数字)', 'number', 'binary', 'Binary (二进制)', STRING_ONLY),
+    mkFaker('Number (数字)', 'number', 'octal', 'Octal (八进制)', STRING_ONLY),
+    mkFaker('Number (数字)', 'number', 'hex', 'Hex (十六进制)', STRING_ONLY),
+
+    // ID & String
+    mkFaker('String (ID)', 'string', 'uuid', 'UUID / GUID', ['Edm.Guid', 'Edm.String']),
+    mkFaker('String (ID)', 'string', 'alphanumeric', 'Alphanumeric', STRING_ONLY),
+    mkFaker('String (ID)', 'string', 'numeric', 'Numeric String', STRING_ONLY),
     
     // Boolean
-    { value: 'datatype.boolean', label: 'Boolean', category: 'Boolean', type: 'faker', fakerModule: 'datatype', fakerMethod: 'boolean', allowedTypes: ['Edm.Boolean'] },
+    mkFaker('Datatype (数据类型)', 'datatype', 'boolean', 'Boolean (布尔)', ['Edm.Boolean']),
+
+    // Image
+    mkFaker('Image (图像)', 'image', 'avatar', 'Avatar URL', STRING_ONLY),
+    mkFaker('Image (图像)', 'image', 'url', 'Image URL', STRING_ONLY),
 ];
 
 export const ALL_STRATEGIES = [...COMMON_STRATEGIES, ...FAKER_DEFINITIONS];
@@ -96,6 +196,12 @@ export const isStrategyCompatible = (strategyValue: string, odataType: string): 
     const strategy = ALL_STRATEGIES.find(s => s.value === strategyValue);
     if (!strategy) return false;
     if (!strategy.allowedTypes) return true; // 通用类型 (如 Null)
+    
+    // 特殊处理 Number 兼容性
+    if (odataType === 'Edm.Int32' || odataType === 'Edm.Int16' || odataType === 'Edm.Int64') {
+        if (strategy.value === 'number.int') return true;
+    }
+    
     return strategy.allowedTypes.includes(odataType);
 };
 
@@ -109,14 +215,6 @@ export const getGroupedStrategies = () => {
     return groups;
 };
 
-// 获取适用于特定类型的策略 (Legacy)
-export const getStrategiesForType = (odataType: string) => {
-    return ALL_STRATEGIES.filter(s => {
-        if (!s.allowedTypes) return true; // 通用类型 (如 Null)
-        return s.allowedTypes.includes(odataType);
-    });
-};
-
 // 扁平化实体属性 (支持嵌套 ComplexType)
 export const flattenEntityProperties = (
     entity: EntityType, 
@@ -127,8 +225,6 @@ export const flattenEntityProperties = (
 
     entity.properties.forEach(p => {
         const currentPath = prefix ? `${prefix}.${p.name}` : p.name;
-        
-        // 检查是否为 ComplexType
         const complexTypeName = p.type.split('.').pop() || '';
         const complexType = schema.entities.find(e => e.name === complexTypeName);
 
@@ -138,7 +234,6 @@ export const flattenEntityProperties = (
             results.push({ path: currentPath, property: p });
         }
     });
-
     return results;
 };
 
@@ -147,20 +242,20 @@ export const suggestStrategy = (prop: EntityProperty): string => {
     const name = prop.name.toLowerCase();
     const type = prop.type;
 
-    // 1. 基于类型强匹配
     if (type === 'Edm.Boolean') return 'datatype.boolean';
     if (type === 'Edm.Guid') return 'string.uuid';
     if (type === 'Edm.DateTime' || type === 'Edm.DateTimeOffset') return 'date.recent';
-    if (type === 'Edm.Int16' || type === 'Edm.Int32' || type === 'Edm.Int64' || type === 'Edm.Byte') return 'number.int';
+    if (['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.Byte'].includes(type)) return 'number.int';
+    if (['Edm.Decimal', 'Edm.Double', 'Edm.Single'].includes(type)) return 'commerce.price';
 
-    // 2. 基于名称推断 (String)
     if (type === 'Edm.String') {
         if (name.includes('email')) return 'internet.email';
-        if (name.includes('phone') || name.includes('tel')) return 'phone.number'; // Faker fallback
+        if (name.includes('phone') || name.includes('tel')) return 'phone.number';
         if (name.includes('url') || name.includes('link')) return 'internet.url';
         if (name.includes('name')) {
             if (name.includes('first')) return 'person.firstName';
             if (name.includes('last')) return 'person.lastName';
+            if (name.includes('company')) return 'company.name';
             if (name.includes('product')) return 'commerce.productName';
             return 'person.fullName';
         }
@@ -168,12 +263,12 @@ export const suggestStrategy = (prop: EntityProperty): string => {
         if (name.includes('country')) return 'location.country';
         if (name.includes('address')) return 'location.streetAddress';
         if (name.includes('zip') || name.includes('code')) return 'location.zipCode';
-        if (name.includes('desc')) return 'commerce.productDescription'; // Faker fallback
+        if (name.includes('desc')) return 'commerce.productDescription'; 
         if (name.includes('id') || name.includes('key')) return 'string.uuid';
+        if (name.includes('img') || name.includes('pic') || name.includes('avatar')) return 'image.avatar';
         return 'lorem.word';
     }
 
-    // 3. 默认
     return 'custom.null';
 };
 
@@ -190,7 +285,6 @@ export const generateValue = (
 
     let result: any = null;
 
-    // A. 处理 Custom
     if (strategy.type === 'custom.null') return null;
     if (strategy.type === 'custom.empty') return "";
     if (strategy.type === 'custom.undefined') return undefined;
@@ -198,19 +292,16 @@ export const generateValue = (
         const conf = incrementConfig || { start: 1, step: 1, prefix: '', suffix: '' };
         const numVal = conf.start + (index * conf.step);
         
-        // 核心逻辑修改：如果用户配置了前缀或后缀，即使是数字类型字段，也尝试拼接字符串
-        // (后续 enforceConstraints 会尝试解析回数字，或者用户需要自己承担类型不匹配的后果)
+        // 强制拼接前缀后缀
         const valStr = `${conf.prefix}${numVal}${conf.suffix}`;
 
-        // 如果字段非字符串类型，且没有配置前后缀，优先返回原始数字以保持精度
+        // 若非String且无前后缀，保留数字类型以防精度丢失
         if (prop.type !== 'Edm.String' && !conf.prefix && !conf.suffix) {
             return numVal;
         }
-
         return valStr;
     }
 
-    // B. 处理 Faker
     if (strategy.type === 'faker' && strategy.fakerModule && strategy.fakerMethod) {
         try {
             // @ts-ignore
@@ -224,7 +315,6 @@ export const generateValue = (
         }
     }
 
-    // C. 数据后处理 (Constraints enforcement)
     return enforceConstraints(result, prop);
 };
 
@@ -234,7 +324,6 @@ const enforceConstraints = (val: any, prop: EntityProperty): any => {
 
     const type = prop.type;
 
-    // 1. String Constraints
     if (type === 'Edm.String') {
         let str = String(val);
         if (prop.maxLength && prop.maxLength > 0) {
@@ -243,19 +332,15 @@ const enforceConstraints = (val: any, prop: EntityProperty): any => {
         return str;
     }
 
-    // 2. Number Constraints
     if (['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.Byte', 'Edm.SByte'].includes(type)) {
-        // 如果 val 是字符串 (例如带前缀的 "ID_1")，parseInt 会尝试解析
-        // "ID_1" -> NaN; "1_suffix" -> 1
         let num = typeof val === 'number' ? val : parseInt(val);
-        if (isNaN(num)) return 0; // 解析失败回退为 0
+        if (isNaN(num)) return 0;
 
         if (type === 'Edm.Byte') num = Math.abs(num) % 256;
         else if (type === 'Edm.SByte') {
-            num = num % 128; // Simple clamp
+            num = num % 128; 
         } 
         else if (type === 'Edm.Int16') {
-             // 限制在 Short 范围
              if (num > 32767) num = 32767;
              if (num < -32768) num = -32768;
         }
@@ -263,7 +348,6 @@ const enforceConstraints = (val: any, prop: EntityProperty): any => {
         return Math.floor(num);
     }
 
-    // 3. Decimal/Double
     if (['Edm.Decimal', 'Edm.Double', 'Edm.Single'].includes(type)) {
         let num = typeof val === 'number' ? val : parseFloat(val);
         if (isNaN(num)) return 0;
@@ -274,9 +358,7 @@ const enforceConstraints = (val: any, prop: EntityProperty): any => {
         return num;
     }
 
-    // 4. Date
     if (type.includes('Date')) {
-        // Faker returns Date object, usually fine. Convert to ISO string for OData?
         if (val instanceof Date) return val.toISOString();
         return val;
     }
