@@ -17,8 +17,16 @@ const mk = (cat: string, mod: string, meth: string, lbl: string, types?: string[
     allowedTypes: types
 });
 
+// 1. 默认策略 (Custom)
+export const DEFAULT_STRATEGIES: MockStrategy[] = [
+    { value: 'custom.null', label: 'Null (空值)', category: 'Custom (自定义)', type: 'custom.null' },
+    { value: 'custom.empty', label: 'Empty String (空字符串)', category: 'Custom (自定义)', type: 'custom.empty', allowedTypes: ['Edm.String'] },
+    { value: 'custom.increment', label: 'Auto Increment (自增序列)', category: 'Custom (自定义)', type: 'custom.increment', allowedTypes: ['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.Byte', 'Edm.SByte', 'Edm.Decimal', 'Edm.Double', 'Edm.Single', 'Edm.String'] },
+];
+
+// 2. Faker 策略定义
 export const FAKER_DEFINITIONS: MockStrategy[] = [
-    // --- Person (人物) ---
+    // --- Person (人物) - Complete ---
     mk('Person (人物)', 'person', 'fullName', 'Full Name (全名)', STR),
     mk('Person (人物)', 'person', 'firstName', 'First Name (名)', STR),
     mk('Person (人物)', 'person', 'lastName', 'Last Name (姓)', STR),
@@ -34,7 +42,7 @@ export const FAKER_DEFINITIONS: MockStrategy[] = [
     mk('Person (人物)', 'person', 'suffix', 'Suffix (称谓后缀)', STR),
     mk('Person (人物)', 'person', 'zodiacSign', 'Zodiac Sign (星座)', STR),
 
-    // --- Internet (互联网) ---
+    // --- Internet (互联网) - Expanded ---
     mk('Internet (互联网)', 'internet', 'email', 'Email (邮箱)', STR),
     mk('Internet (互联网)', 'internet', 'exampleEmail', 'Example Email (示例邮箱)', STR),
     mk('Internet (互联网)', 'internet', 'userName', 'Username (用户名)', STR),
@@ -48,13 +56,19 @@ export const FAKER_DEFINITIONS: MockStrategy[] = [
     mk('Internet (互联网)', 'internet', 'mac', 'MAC Address', STR),
     mk('Internet (互联网)', 'internet', 'protocol', 'Protocol (协议)', STR),
     mk('Internet (互联网)', 'internet', 'httpMethod', 'HTTP Method', STR),
+    mk('Internet (互联网)', 'internet', 'httpStatusCode', 'HTTP Status Code', NUM),
+    mk('Internet (互联网)', 'internet', 'color', 'Internet Color', STR),
     mk('Internet (互联网)', 'internet', 'emoji', 'Emoji (表情)', STR),
 
-    // --- Location (位置) ---
+    // --- Location (位置) - Expanded ---
     mk('Location (位置)', 'location', 'city', 'City (城市)', STR),
     mk('Location (位置)', 'location', 'country', 'Country (国家)', STR),
     mk('Location (位置)', 'location', 'countryCode', 'Country Code (国家代码)', STR),
-    mk('Location (位置)', 'location', 'streetAddress', 'Street Address (街道地址)', STR),
+    mk('Location (位置)', 'location', 'street', 'Street (街道全称)', STR),
+    mk('Location (位置)', 'location', 'streetAddress', 'Street Address (详细地址)', STR),
+    mk('Location (位置)', 'location', 'streetName', 'Street Name (路名)', STR),
+    mk('Location (位置)', 'location', 'buildingNumber', 'Building Number (门牌号)', STR),
+    mk('Location (位置)', 'location', 'secondaryAddress', 'Secondary Address (次级地址)', STR),
     mk('Location (位置)', 'location', 'zipCode', 'Zip Code (邮编)', STR),
     mk('Location (位置)', 'location', 'state', 'State (州/省)', STR),
     mk('Location (位置)', 'location', 'county', 'County (县/郡)', STR),
@@ -63,7 +77,7 @@ export const FAKER_DEFINITIONS: MockStrategy[] = [
     mk('Location (位置)', 'location', 'direction', 'Direction (方向)', STR),
     mk('Location (位置)', 'location', 'timeZone', 'Time Zone (时区)', STR),
 
-    // --- Finance (金融) ---
+    // --- Finance (金融) - Complete ---
     mk('Finance (金融)', 'finance', 'accountName', 'Account Name (账户名)', STR),
     mk('Finance (金融)', 'finance', 'accountNumber', 'Account Number (账号)', STR),
     mk('Finance (金融)', 'finance', 'amount', 'Amount (金额)', ['Edm.Decimal', 'Edm.Double', ...STR]),
@@ -71,12 +85,15 @@ export const FAKER_DEFINITIONS: MockStrategy[] = [
     mk('Finance (金融)', 'finance', 'currencyName', 'Currency Name (货币名)', STR),
     mk('Finance (金融)', 'finance', 'currencySymbol', 'Currency Symbol (符号)', STR),
     mk('Finance (金融)', 'finance', 'bitcoinAddress', 'Bitcoin Addr (比特币地址)', STR),
+    mk('Finance (金融)', 'finance', 'ethereumAddress', 'Ethereum Addr (以太坊地址)', STR),
     mk('Finance (金融)', 'finance', 'creditCardNumber', 'Credit Card (信用卡号)', STR),
     mk('Finance (金融)', 'finance', 'creditCardCVV', 'CVV', STR),
+    mk('Finance (金融)', 'finance', 'creditCardIssuer', 'Card Issuer (发卡行)', STR),
     mk('Finance (金融)', 'finance', 'iban', 'IBAN', STR),
+    mk('Finance (金融)', 'finance', 'bic', 'BIC', STR),
     mk('Finance (金融)', 'finance', 'transactionType', 'Transaction Type (交易类型)', STR),
 
-    // --- Date (日期) ---
+    // --- Date (日期) - Complete ---
     mk('Date (日期)', 'date', 'past', 'Past Date (过去)', DATE),
     mk('Date (日期)', 'date', 'future', 'Future Date (未来)', DATE),
     mk('Date (日期)', 'date', 'recent', 'Recent Date (最近)', DATE),
@@ -85,7 +102,7 @@ export const FAKER_DEFINITIONS: MockStrategy[] = [
     mk('Date (日期)', 'date', 'month', 'Month (月份)', STR),
     mk('Date (日期)', 'date', 'weekday', 'Weekday (星期)', STR),
 
-    // --- Commerce (商业) ---
+    // --- Commerce (商业) - Complete ---
     mk('Commerce (商业)', 'commerce', 'productName', 'Product Name (产品名)', STR),
     mk('Commerce (商业)', 'commerce', 'price', 'Price (价格)', ['Edm.Decimal', 'Edm.Double', ...STR]),
     mk('Commerce (商业)', 'commerce', 'department', 'Department (部门)', STR),
@@ -94,14 +111,53 @@ export const FAKER_DEFINITIONS: MockStrategy[] = [
     mk('Commerce (商业)', 'commerce', 'productMaterial', 'Material (材质)', STR),
     mk('Commerce (商业)', 'commerce', 'isbn', 'ISBN', STR),
 
-    // --- Company (公司) ---
+    // --- Company (公司) - Complete ---
     mk('Company (公司)', 'company', 'name', 'Company Name (公司名)', STR),
     mk('Company (公司)', 'company', 'catchPhrase', 'Catch Phrase (口号)', STR),
     mk('Company (公司)', 'company', 'buzzPhrase', 'Buzz Phrase (热词)', STR),
+    mk('Company (公司)', 'company', 'catchPhraseAdjective', 'CatchPhrase Adj', STR),
+    mk('Company (公司)', 'company', 'catchPhraseDescriptor', 'CatchPhrase Desc', STR),
+    mk('Company (公司)', 'company', 'catchPhraseNoun', 'CatchPhrase Noun', STR),
+    mk('Company (公司)', 'company', 'buzzAdjective', 'Buzz Adj', STR),
+    mk('Company (公司)', 'company', 'buzzNoun', 'Buzz Noun', STR),
+    mk('Company (公司)', 'company', 'buzzVerb', 'Buzz Verb', STR),
 
     // --- Phone (电话) ---
     mk('Phone (电话)', 'phone', 'number', 'Phone Number (号码)', STR),
     mk('Phone (电话)', 'phone', 'imei', 'IMEI', STR),
+
+    // --- Airline (航空) - New! ---
+    mk('Airline (航空)', 'airline', 'airline', 'Airline Name (航司)', STR),
+    mk('Airline (航空)', 'airline', 'airport', 'Airport (机场)', STR),
+    mk('Airline (航空)', 'airline', 'airplane', 'Airplane (飞机)', STR),
+    mk('Airline (航空)', 'airline', 'flightNumber', 'Flight Number (航班号)', STR),
+    mk('Airline (航空)', 'airline', 'recordLocator', 'Record Locator (订座记录)', STR),
+    mk('Airline (航空)', 'airline', 'seat', 'Seat (座位)', STR),
+    mk('Airline (航空)', 'airline', 'aircraftType', 'Aircraft Type (机型)', STR),
+
+    // --- Food (食物) - New! ---
+    mk('Food (食物)', 'food', 'dish', 'Dish (菜名)', STR),
+    mk('Food (食物)', 'food', 'description', 'Description (描述)', STR),
+    mk('Food (食物)', 'food', 'ingredient', 'Ingredient (配料)', STR),
+    mk('Food (食物)', 'food', 'spice', 'Spice (香料)', STR),
+    mk('Food (食物)', 'food', 'vegetable', 'Vegetable (蔬菜)', STR),
+    mk('Food (食物)', 'food', 'fruit', 'Fruit (水果)', STR),
+    mk('Food (食物)', 'food', 'meat', 'Meat (肉类)', STR),
+
+    // --- Git (Git) - New! ---
+    mk('Git (Git)', 'git', 'branch', 'Branch (分支)', STR),
+    mk('Git (Git)', 'git', 'commitEntry', 'Commit Entry', STR),
+    mk('Git (Git)', 'git', 'commitMessage', 'Commit Message', STR),
+    mk('Git (Git)', 'git', 'commitSha', 'Commit SHA', STR),
+    mk('Git (Git)', 'git', 'shortSha', 'Short SHA', STR),
+
+    // --- Book (书籍) - New! ---
+    mk('Book (书籍)', 'book', 'title', 'Title (书名)', STR),
+    mk('Book (书籍)', 'book', 'author', 'Author (作者)', STR),
+    mk('Book (书籍)', 'book', 'publisher', 'Publisher (出版社)', STR),
+    mk('Book (书籍)', 'book', 'genre', 'Genre (流派)', STR),
+    mk('Book (书籍)', 'book', 'format', 'Format (格式)', STR),
+    mk('Book (书籍)', 'book', 'series', 'Series (系列)', STR),
 
     // --- Animal (动物) ---
     mk('Animal (动物)', 'animal', 'type', 'Type (种类)', STR),
@@ -113,6 +169,9 @@ export const FAKER_DEFINITIONS: MockStrategy[] = [
     mk('Animal (动物)', 'animal', 'fish', 'Fish (鱼)', STR),
     mk('Animal (动物)', 'animal', 'snake', 'Snake (蛇)', STR),
     mk('Animal (动物)', 'animal', 'insect', 'Insect (昆虫)', STR),
+    mk('Animal (动物)', 'animal', 'cow', 'Cow (牛)', STR),
+    mk('Animal (动物)', 'animal', 'horse', 'Horse (马)', STR),
+    mk('Animal (动物)', 'animal', 'rabbit', 'Rabbit (兔)', STR),
 
     // --- Vehicle (车辆) ---
     mk('Vehicle (车辆)', 'vehicle', 'vehicle', 'Vehicle (车辆名称)', STR),
@@ -122,6 +181,7 @@ export const FAKER_DEFINITIONS: MockStrategy[] = [
     mk('Vehicle (车辆)', 'vehicle', 'fuel', 'Fuel (燃料)', STR),
     mk('Vehicle (车辆)', 'vehicle', 'vin', 'VIN', STR),
     mk('Vehicle (车辆)', 'vehicle', 'color', 'Color (颜色)', STR),
+    mk('Vehicle (车辆)', 'vehicle', 'bicycle', 'Bicycle (自行车)', STR),
 
     // --- Color (颜色) ---
     mk('Color (颜色)', 'color', 'human', 'Human Color (Red...)', STR),
@@ -149,6 +209,7 @@ export const FAKER_DEFINITIONS: MockStrategy[] = [
     mk('Hacker (黑客)', 'hacker', 'noun', 'Noun (名词)', STR),
     mk('Hacker (黑客)', 'hacker', 'verb', 'Verb (动词)', STR),
     mk('Hacker (黑客)', 'hacker', 'phrase', 'Phrase (短语)', STR),
+    mk('Hacker (黑客)', 'hacker', 'ingverb', 'Ingverb', STR),
 
     // --- Music (音乐) ---
     mk('Music (音乐)', 'music', 'genre', 'Genre (流派)', STR),
@@ -177,6 +238,7 @@ export const FAKER_DEFINITIONS: MockStrategy[] = [
     mk('Database (数据库)', 'database', 'type', 'Column Type', STR),
     mk('Database (数据库)', 'database', 'collation', 'Collation', STR),
     mk('Database (数据库)', 'database', 'engine', 'Engine', STR),
+    mk('Database (数据库)', 'database', 'mongodbObjectId', 'MongoDB ID', STR),
 
     // --- String & Number (基础类型) ---
     mk('Number (数字)', 'number', 'int', 'Integer (整数)', NUM),

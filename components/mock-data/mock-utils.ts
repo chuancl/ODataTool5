@@ -1,7 +1,7 @@
 
 import { faker } from '@faker-js/faker';
 import { EntityType, EntityProperty, ParsedSchema } from '@/utils/odata-helper';
-import { FAKER_DEFINITIONS } from './faker-definitions';
+import { DEFAULT_STRATEGIES, FAKER_DEFINITIONS } from './faker-definitions';
 
 export type MockStrategyType = 'faker' | 'custom.null' | 'custom.empty' | 'custom.undefined' | 'custom.increment';
 
@@ -23,13 +23,8 @@ export interface MockFieldConfig {
     path: string; property: EntityProperty; strategy: string; incrementConfig?: AutoIncrementConfig;
 }
 
-const CUSTOM_STRATEGIES: MockStrategy[] = [
-    { value: 'custom.null', label: 'Null (空值)', category: 'Custom (自定义)', type: 'custom.null' },
-    { value: 'custom.empty', label: 'Empty String (空字符串)', category: 'Custom (自定义)', type: 'custom.empty', allowedTypes: ['Edm.String'] },
-    { value: 'custom.increment', label: 'Auto Increment (自增序列)', category: 'Custom (自定义)', type: 'custom.increment', allowedTypes: ['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.Byte', 'Edm.SByte', 'Edm.Decimal', 'Edm.Double', 'Edm.Single', 'Edm.String'] },
-];
-
-export const ALL_STRATEGIES = [...CUSTOM_STRATEGIES, ...FAKER_DEFINITIONS];
+// 统一合并所有策略 (默认 + Faker)
+export const ALL_STRATEGIES = [...DEFAULT_STRATEGIES, ...FAKER_DEFINITIONS];
 
 export const getGroupedStrategies = () => {
     const groups: Record<string, MockStrategy[]> = {};
