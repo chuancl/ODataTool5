@@ -96,16 +96,26 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
             }
         });
         setRowSelection(newSelection);
-        // Reset draft when data changes drastically
-        setEditDraft({});
-        onDraftChange?.({});
-        setIsEditing(false);
-    }, [data, parentSelected]);
+        
+        // Fix: 只有在非外部控制模式下，才因数据变更重置编辑状态。
+        // 如果 externalIsEditing 有值 (无论是 true 还是 false)，说明父级在控制，
+        // 此时不要因为 parentSelected 变化 (导致 data 引用变化) 而重置子表状态。
+        if (externalIsEditing === undefined) {
+            setEditDraft({});
+            onDraftChange?.({});
+            setIsEditing(false);
+        }
+    }, [data, parentSelected, externalIsEditing]);
 
     // 同步外部编辑状态
     useEffect(() => {
         if (externalIsEditing !== undefined) {
             setIsEditing(externalIsEditing);
+            // 只有当明确关闭编辑模式时，才清理草稿
+            if (!externalIsEditing) {
+                setEditDraft({});
+                onDraftChange?.({});
+            }
         }
     }, [externalIsEditing]);
 
