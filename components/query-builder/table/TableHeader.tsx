@@ -32,8 +32,9 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
     enableDelete = true,
     hideUpdateButton = false
 }) => {
-    // 逻辑修正：如果是根表，始终显示。如果是子表，只有在编辑模式下显示（以便用户可以提交更新）。
-    if (!isRoot && !isEditing) return null;
+    // 逻辑修正：如果是子表 (非 Root)，完全不显示表头工具栏。
+    // 编辑控制完全由主表按钮统一处理。
+    if (!isRoot) return null;
 
     return (
         <div className="bg-default-50 p-2 flex gap-2 border-b border-divider items-center justify-between shrink-0 h-12">
@@ -46,20 +47,20 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
              
              <div className="flex gap-2">
                  {/* Create Button: Only for Root or if specifically enabled/needed */}
-                {isRoot && onCreate && (
+                {onCreate && (
                     <Button size="sm" color="primary" variant="solid" onPress={onCreate} startContent={<Plus size={14} />}>
                         新增选中 (Create Selected)
                     </Button>
                 )}
 
-                {/* 1. Modify Button: Show only if enabled and not editing (And usually only for Root) */}
-                {isRoot && enableEdit && !isEditing && (
+                {/* 1. Modify Button: Show only if enabled and not editing */}
+                {enableEdit && !isEditing && (
                     <Button size="sm" variant="flat" onPress={onStartEdit} startContent={<Pencil size={14} />}>
                         修改 (Modify)
                     </Button>
                 )}
 
-                {/* 2. Update/Cancel Buttons: Show only when editing (For both Root and Sub-tables) */}
+                {/* 2. Update/Cancel Buttons: Show only when editing */}
                 {enableEdit && isEditing && (
                     <>
                         {!hideUpdateButton && (
@@ -73,19 +74,17 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
                     </>
                 )}
                 
-                {/* 3. Delete Button: Show only if enabled (Usually only for Root) */}
-                {isRoot && enableDelete && (
+                {/* 3. Delete Button: Show only if enabled */}
+                {enableDelete && (
                     <Button size="sm" color="danger" variant="light" onPress={onDelete} startContent={<Trash size={14} />}>
                         删除 (Delete)
                     </Button>
                 )}
 
-                {/* 4. Export Button: Always show for Root */}
-                {isRoot && (
-                    <Button size="sm" color="primary" variant="light" onPress={onExport} startContent={<Save size={14} />}>
-                        导出 Excel
-                    </Button>
-                )}
+                {/* 4. Export Button */}
+                <Button size="sm" color="primary" variant="light" onPress={onExport} startContent={<Save size={14} />}>
+                    导出 Excel
+                </Button>
             </div>
         </div>
     );

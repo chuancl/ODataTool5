@@ -1,12 +1,12 @@
 
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { 
     ChevronUp, ChevronDown, GripVertical
 } from 'lucide-react';
 import { 
     useReactTable, 
     getCoreRowModel, 
-    getSortedRowModel,
+    getSortedRowModel, 
     getExpandedRowModel,
     flexRender, 
     SortingState,
@@ -22,6 +22,7 @@ import { ParsedSchema } from '@/utils/odata-helper';
 import { TableHeader } from './TableHeader';
 import { useTableColumns } from './useTableColumns';
 import { useToast } from '@/components/ui/ToastContext';
+import { TableContext, TableContextType, GetUpdatesFn, UpdateResult, useTableContext } from './TableContext';
 
 interface RecursiveDataTableProps {
     data: any[];
@@ -80,6 +81,12 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
     const [isEditing, setIsEditing] = useState(false);
     const [editDraft, setEditDraft] = useState<Record<number, Record<string, any>>>({});
 
+    // --- Context for Recursive Updates ---
+    const parentContext = useTableContext();
+    const tableId = useMemo(() => Math.random().toString(36).substr(2, 9), []);
+    // Only Root maintains the registry
+    const registryRef = useRef<Map<string, GetUpdatesFn>>(new Map());
+
     // --- 1. 初始化及同步选中状态 ---
     useEffect(() => {
         const newSelection: RowSelectionState = {};
@@ -89,7 +96,7 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
             }
         });
         setRowSelection(newSelection);
-        // Reset draft when data changes drastically, but be careful not to wipe during local updates if data ref implies same data
+        // Reset draft when data changes drastically
         setEditDraft({});
         onDraftChange?.({});
         setIsEditing(false);
@@ -158,28 +165,14 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
         return { pkSet, fkSet, fkInfoMap, schemaProperties, navPropSet };
     }, [schema, entityName]);
 
-    // --- Edit Handlers ---
-    const handleStartEdit = () => {
-        setIsEditing(true);
-    };
-
-    const handleCancelEdit = () => {
-        setIsEditing(false);
-        setEditDraft({});
-        onDraftChange?.({});
-    };
-
-    const handleConfirmUpdate = () => {
-        if (!onUpdate) {
-            console.error("No onUpdate handler provided");
-            return;
-        }
-        
-        const updates: { item: any, changes: any }[] = [];
+    // --- Helper: Get Local Updates ---
+    const getLocalUpdates = useCallback((): UpdateResult[] => {
+        const updates: UpdateResult[] = [];
         const changedIndices = Object.keys(editDraft).map(Number);
         
         changedIndices.forEach(idx => {
             // Check row selection (handle both number and string keys)
+            // 修改点：这里的逻辑确保了只收集“被勾选”的行的修改
             const isSelected = rowSelection[idx] === true || rowSelection[String(idx)] === true;
 
             if (isSelected) {
@@ -201,9 +194,47 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
                 }
             }
         });
+        return updates;
+    }, [editDraft, rowSelection, data]);
 
-        if (updates.length === 0) {
-             const hasDrafts = Object.keys(editDraft).length > 0;
+    // --- Register to Parent Context (if Sub-Table) ---
+    useEffect(() => {
+        if (!isRoot && parentContext) {
+            parentContext.register(tableId, getLocalUpdates);
+            return () => parentContext.unregister(tableId);
+        }
+    }, [isRoot, parentContext, tableId, getLocalUpdates]);
+
+    // --- Edit Handlers (Root Only mostly) ---
+    const handleStartEdit = () => {
+        setIsEditing(true);
+    };
+
+    const handleCancelEdit = () => {
+        setIsEditing(false);
+        setEditDraft({});
+        onDraftChange?.({});
+    };
+
+    const handleConfirmUpdate = () => {
+        if (!onUpdate) {
+            console.error("No onUpdate handler provided");
+            return;
+        }
+        
+        // 1. Get Root Updates
+        const allUpdates: UpdateResult[] = [...getLocalUpdates()];
+
+        // 2. Get Children Updates (if Root)
+        if (isRoot) {
+            registryRef.current.forEach(getUpdatesFn => {
+                allUpdates.push(...getUpdatesFn());
+            });
+        }
+
+        if (allUpdates.length === 0) {
+             // 简单的检查，如果真的有输入但没勾选，给提示
+             const hasDrafts = Object.keys(editDraft).length > 0; 
              if (hasDrafts) {
                  toast.warning("检测到修改，但未选中对应行。\n请勾选修改过的行再点击更新。\n(Changes detected but rows not selected. Please select modified rows.)");
              } else {
@@ -212,7 +243,7 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
              return;
         }
 
-        onUpdate(updates);
+        onUpdate(allUpdates);
     };
 
     const handleInputChange = (rowIndex: number, columnId: string, value: any) => {
@@ -326,7 +357,17 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
         }
     };
 
-    return (
+    // --- Provider Logic (If Root) ---
+    const contextValue: TableContextType = useMemo(() => ({
+        register: (id, getUpdates) => {
+            registryRef.current.set(id, getUpdates);
+        },
+        unregister: (id) => {
+            registryRef.current.delete(id);
+        }
+    }), []);
+
+    const tableContent = (
         <div className="h-full flex flex-col bg-content1 overflow-hidden">
             <TableHeader 
                 isRoot={isRoot}
@@ -469,4 +510,15 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
             </div>
         </div>
     );
+
+    // If Root, Wrap in Provider to manage updates for all descendants.
+    if (isRoot) {
+        return (
+            <TableContext.Provider value={contextValue}>
+                {tableContent}
+            </TableContext.Provider>
+        );
+    }
+
+    return tableContent;
 };
