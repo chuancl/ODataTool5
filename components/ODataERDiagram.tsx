@@ -1,5 +1,5 @@
 
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import ReactFlow, { 
   Controls, 
   Background, 
@@ -16,11 +16,12 @@ import { ParsedSchema } from '@/utils/odata-helper';
 import { Button } from "@nextui-org/button";
 import { Spinner } from "@nextui-org/spinner";
 import { Switch } from "@nextui-org/switch";
-import { Zap, FileCode, Download, Copy } from 'lucide-react';
+import { Zap, FileCode, Download, Copy, Network } from 'lucide-react';
 import { calculateDynamicLayout } from './er-diagram/layout';
 import { EntityNode } from './er-diagram/EntityNode';
 import { DiagramContext } from './er-diagram/DiagramContext';
 import { generateHashCode, getColor } from './er-diagram/utils';
+import xmlFormat from 'xml-formatter';
 
 // CodeMirror imports for XML view
 import CodeMirror from '@uiw/react-codemirror';
@@ -62,6 +63,22 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
 
   // CodeMirror Theme
   const editorTheme = isDark ? vscodeDark : githubLight;
+
+  // Format XML Content
+  const formattedXml = useMemo(() => {
+    if (!xmlContent) return '';
+    try {
+        return xmlFormat(xmlContent, {
+            indentation: '  ',
+            filter: (node) => node.type !== 'Comment',
+            collapseContent: true,
+            lineSeparator: '\n'
+        });
+    } catch (e) {
+        console.warn("XML Formatting failed, showing raw content", e);
+        return xmlContent;
+    }
+  }, [xmlContent]);
 
   // Context Helpers
   const addActiveEntity = useCallback((id: string) => {
@@ -377,8 +394,8 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
 
   // Helper for XML View
   const handleDownloadXml = () => {
-      if (!xmlContent) return;
-      const blob = new Blob([xmlContent], { type: 'application/xml' });
+      if (!formattedXml) return;
+      const blob = new Blob([formattedXml], { type: 'application/xml' });
       const u = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = u; link.download = 'metadata.xml';
@@ -389,7 +406,7 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
   };
 
   const handleCopyXml = () => {
-      if (xmlContent) navigator.clipboard.writeText(xmlContent);
+      if (formattedXml) navigator.clipboard.writeText(formattedXml);
   };
 
   return (
@@ -414,10 +431,10 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
         {/* Switch for Diagram / XML View */}
         <div className="flex items-center gap-2 bg-content1/90 backdrop-blur-md p-1.5 px-3 rounded-lg border border-divider shadow-sm">
             <span className="text-xs font-medium text-default-500 flex items-center gap-1">
-                <FileCode size={14} className={showXml ? "text-primary" : "text-default-400"} />
-                显示原始文件
+                {showXml ? <Network size={14} className="text-primary"/> : <FileCode size={14} className="text-default-400" />}
+                {showXml ? "显示ER图" : "显示原始文件"}
             </span>
-            <Switch size="sm" isSelected={showXml} onValueChange={setShowXml} aria-label="显示原始文件" />
+            <Switch size="sm" isSelected={showXml} onValueChange={setShowXml} aria-label="Toggle View" />
         </div>
 
         {/* Other controls hidden when showing XML to avoid clutter */}
@@ -440,12 +457,12 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
         className="w-full h-full absolute inset-0 bg-content1 z-0 flex flex-col"
         style={{ display: showXml ? 'flex' : 'none' }}
       >
-          {/* XML Toolbar */}
-          <div className="p-2 border-b border-divider flex justify-between items-center bg-content2/50 backdrop-blur-md shrink-0">
+          {/* XML Toolbar - Moved actions to LEFT to prevent overlap with top-right switch */}
+          <div className="p-2 border-b border-divider flex items-center gap-4 bg-content2/50 backdrop-blur-md shrink-0">
              <span className="text-xs font-bold text-default-500 px-2 flex items-center gap-2">
                  <FileCode size={14}/> Metadata.xml
              </span>
-             <div className="flex gap-1 mr-40"> {/* Right margin to avoid overlap with controls */}
+             <div className="flex gap-1">
                  <Button isIconOnly size="sm" variant="light" onPress={handleDownloadXml} title="下载 XML"><Download size={14}/></Button>
                  <Button isIconOnly size="sm" variant="light" onPress={handleCopyXml} title="复制 XML"><Copy size={14}/></Button>
              </div>
@@ -454,7 +471,7 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
           {/* CodeMirror Editor */}
           <div className="flex-1 overflow-hidden relative text-sm">
              <CodeMirror
-                value={xmlContent || '<!-- No XML Content Available -->'}
+                value={formattedXml || '<!-- No XML Content Available -->'}
                 height="100%"
                 className="h-full [&_.cm-scroller]:overflow-scroll"
                 extensions={[xml()]}
