@@ -425,9 +425,9 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
   };
 
   return (
-    <div className="w-full h-full relative bg-content2/30">
+    <div className="w-full h-full relative bg-slate-100 dark:bg-content2/30">
       {(isLoading || isProcessingLayout) && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm gap-4">
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 dark:bg-background/80 backdrop-blur-sm gap-4">
           <Spinner size="lg" color="primary" />
           <p className="text-default-500 font-medium">
              {isLoading ? "Fetching Metadata..." : "Calculating Layout..."}
@@ -444,9 +444,9 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
       {/* Controls Overlay (Top Right) */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end">
         {/* Switch for Diagram / XML View */}
-        <div className="flex items-center gap-2 bg-content1/90 backdrop-blur-md p-1.5 px-3 rounded-lg border border-divider shadow-sm">
-            <span className="text-xs font-medium text-default-500 flex items-center gap-1">
-                {showXml ? <Network size={14} className="text-primary"/> : <FileCode size={14} className="text-default-400" />}
+        <div className="flex items-center gap-2 bg-white/90 dark:bg-content1/90 backdrop-blur-md p-1.5 px-3 rounded-lg border border-slate-300 dark:border-divider shadow-md dark:shadow-sm">
+            <span className="text-xs font-medium text-slate-600 dark:text-default-500 flex items-center gap-1">
+                {showXml ? <Network size={14} className="text-primary"/> : <FileCode size={14} className="text-slate-400 dark:text-default-400" />}
                 {showXml ? "显示ER图" : "显示原始文件"}
             </span>
             <Switch size="sm" isSelected={showXml} onValueChange={setShowXml} aria-label="Toggle View" />
@@ -455,26 +455,26 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
         {/* Other controls hidden when showing XML to avoid clutter */}
         {!showXml && (
             <>
-                <div className="flex items-center gap-2 bg-content1/90 backdrop-blur-md p-1.5 px-3 rounded-lg border border-divider shadow-sm">
-                    <span className="text-xs font-medium text-default-500 flex items-center gap-1">
-                        <Zap size={14} className={isPerformanceMode ? "text-warning" : "text-default-400"} fill={isPerformanceMode ? "currentColor" : "none"} />
+                <div className="flex items-center gap-2 bg-white/90 dark:bg-content1/90 backdrop-blur-md p-1.5 px-3 rounded-lg border border-slate-300 dark:border-divider shadow-md dark:shadow-sm">
+                    <span className="text-xs font-medium text-slate-600 dark:text-default-500 flex items-center gap-1">
+                        <Zap size={14} className={isPerformanceMode ? "text-warning" : "text-slate-400 dark:text-default-400"} fill={isPerformanceMode ? "currentColor" : "none"} />
                         性能模式
                     </span>
                     <Switch size="sm" isSelected={isPerformanceMode} onValueChange={setIsPerformanceMode} aria-label="性能模式" />
                 </div>
-                <Button size="sm" color="primary" variant="flat" onPress={resetView}>重置视图</Button>
+                <Button size="sm" color="primary" variant="flat" onPress={resetView} className="shadow-sm">重置视图</Button>
             </>
         )}
       </div>
 
       {/* --- XML Viewer View --- */}
       <div 
-        className="w-full h-full absolute inset-0 bg-content1 z-0 flex flex-col"
+        className="w-full h-full absolute inset-0 bg-white dark:bg-content1 z-0 flex flex-col"
         style={{ display: showXml ? 'flex' : 'none' }}
       >
           {/* XML Toolbar - Moved actions to LEFT to prevent overlap with top-right switch */}
-          <div className="p-2 border-b border-divider flex items-center gap-4 bg-content2/50 backdrop-blur-md shrink-0">
-             <span className="text-xs font-bold text-default-500 px-2 flex items-center gap-2">
+          <div className="p-2 border-b border-slate-300 dark:border-divider flex items-center gap-4 bg-slate-50/50 dark:bg-content2/50 backdrop-blur-md shrink-0">
+             <span className="text-xs font-bold text-slate-600 dark:text-default-500 px-2 flex items-center gap-2">
                  <FileCode size={14}/> Metadata.xml
              </span>
              <div className="flex gap-1">
@@ -520,7 +520,7 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
                 minZoom={0.1}
                 maxZoom={1.5}
             >
-                <Controls className="bg-content1 border border-divider shadow-sm" />
+                <Controls className="bg-white dark:bg-content1 border border-slate-300 dark:border-divider shadow-md dark:shadow-sm text-slate-700 dark:text-white" />
                 <Background color="#888" gap={24} size={1} />
             </ReactFlow>
         </DiagramContext.Provider>

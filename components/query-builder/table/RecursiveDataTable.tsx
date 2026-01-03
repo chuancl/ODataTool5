@@ -378,7 +378,7 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
     }), []);
 
     const tableContent = (
-        <div className="h-full flex flex-col bg-content1 overflow-hidden">
+        <div className="h-full flex flex-col bg-white dark:bg-content1 overflow-hidden">
             <TableHeader 
                 isRoot={isRoot}
                 isEditing={isEditing}
@@ -393,18 +393,18 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
                 hideUpdateButton={hideUpdateButton}
             />
 
-            <div className="overflow-auto flex-1 w-full bg-content1 scrollbar-thin" ref={tableContainerRef}>
+            <div className="overflow-auto flex-1 w-full bg-white dark:bg-content1 scrollbar-thin" ref={tableContainerRef}>
                 <table 
                     className="w-full text-left border-collapse table-fixed"
                     style={{ width: table.getTotalSize() }}
                 >
-                    <thead className="sticky top-0 z-20 bg-default-50/90 backdrop-blur-md shadow-sm border-b border-divider">
+                    <thead className="sticky top-0 z-20 bg-slate-100/90 dark:bg-default-50/90 backdrop-blur-md shadow-sm border-b border-slate-300 dark:border-divider">
                         {table.getHeaderGroups().map(headerGroup => (
                             <tr key={headerGroup.id}>
                                 {headerGroup.headers.map(header => (
                                     <th 
                                         key={header.id} 
-                                        className="relative p-2 py-3 text-xs font-bold text-default-600 select-none group border-r border-divider/10 hover:bg-default-100 transition-colors"
+                                        className="relative p-2 py-3 text-xs font-bold text-slate-700 dark:text-default-600 select-none group border-r border-slate-300/50 dark:border-divider/10 hover:bg-slate-200 dark:hover:bg-default-100 transition-colors"
                                         style={{ width: header.getSize() }}
                                         draggable={!header.isPlaceholder && !['expander', 'select', 'index'].includes(header.id)}
                                         onDragStart={(e) => {
@@ -434,7 +434,7 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
                                     >
                                         <div className="flex items-center gap-1 w-full overflow-hidden justify-center">
                                             {!['expander', 'select', 'index'].includes(header.id) && (
-                                                <GripVertical size={12} className="text-default-300 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity shrink-0 absolute left-1" />
+                                                <GripVertical size={12} className="text-slate-400 dark:text-default-300 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity shrink-0 absolute left-1" />
                                             )}
                                             {['expander', 'select', 'index'].includes(header.id) ? (
                                                 <div className="flex items-center justify-center w-full">
@@ -474,16 +474,16 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
                             <React.Fragment key={row.id}>
                                 <tr 
                                     className={`
-                                        border-b border-divider/40 last:border-0 transition-colors
-                                        hover:bg-primary/5
-                                        ${row.getIsSelected() ? 'bg-primary/10' : (idx % 2 === 0 ? 'bg-transparent' : 'bg-default-50/30')}
-                                        ${row.getIsExpanded() ? 'bg-default-100 border-b-0' : ''}
+                                        border-b border-slate-200 dark:border-divider/40 last:border-0 transition-colors
+                                        hover:bg-blue-50 dark:hover:bg-primary/5
+                                        ${row.getIsSelected() ? 'bg-blue-100/50 dark:bg-primary/10' : (idx % 2 === 0 ? 'bg-transparent' : 'bg-slate-50/50 dark:bg-default-50/30')}
+                                        ${row.getIsExpanded() ? 'bg-slate-100 dark:bg-default-100 border-b-0' : ''}
                                     `}
                                 >
                                     {row.getVisibleCells().map(cell => (
                                         <td 
                                             key={cell.id} 
-                                            className="p-2 text-sm text-default-700 align-middle overflow-hidden border-r border-divider/10 last:border-0"
+                                            className="p-2 text-sm text-slate-700 dark:text-default-700 align-middle overflow-hidden border-r border-slate-100 dark:border-divider/10 last:border-0"
                                             style={{ width: cell.column.getSize() }}
                                         >
                                             <div className="w-full">
@@ -493,8 +493,8 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
                                     ))}
                                 </tr>
                                 {row.getIsExpanded() && (
-                                    <tr className="bg-default-50/50">
-                                        <td colSpan={row.getVisibleCells().length} className="p-0 border-b border-divider">
+                                    <tr className="bg-slate-50 dark:bg-default-50/50">
+                                        <td colSpan={row.getVisibleCells().length} className="p-0 border-b border-slate-300 dark:border-divider">
                                             <ExpandedRowView 
                                                 rowData={row.original} 
                                                 isDark={isDark} 

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, Key } from 'react';
 import { Select, SelectItem } from "@nextui-org/select";
 import { ChevronRight, ChevronDown } from 'lucide-react';
@@ -122,8 +123,8 @@ export const ExpandSelect: React.FC<ExpandSelectProps> = ({
     };
 
     const commonClassNames = {
-        trigger: "h-14 min-h-14 border-2 border-default-200 data-[hover=true]:border-default-400",
-        label: "text-[10px] font-medium text-default-500",
+        trigger: "h-14 min-h-14 border-2 border-slate-300 dark:border-default-200 data-[hover=true]:border-slate-400 dark:data-[hover=true]:border-default-400 bg-white dark:bg-content2",
+        label: "text-[10px] font-medium text-slate-500 dark:text-default-500",
         value: "text-small"
     };
 

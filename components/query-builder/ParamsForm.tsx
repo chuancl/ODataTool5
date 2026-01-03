@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, Key } from 'react';
 import { Select, SelectItem } from "@nextui-org/select";
 import { EntityType, ParsedSchema } from '@/utils/odata-helper';
@@ -102,7 +103,7 @@ export const ParamsForm: React.FC<ParamsFormProps> = ({
     }, [expand, currentSchema, schema]);
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 rounded-xl bg-content1 shadow-sm border border-divider shrink-0">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 rounded-xl bg-white dark:bg-content1 shadow-md dark:shadow-sm border border-slate-300 dark:border-divider shrink-0">
             {/* Filter Modal Component */}
             <FilterBuilderModal 
                 isOpen={isFilterModalOpen}
@@ -127,8 +128,8 @@ export const ParamsForm: React.FC<ParamsFormProps> = ({
                     // 或者显式设置高度 class
                     className="w-full"
                     classNames={{
-                        trigger: "h-14 min-h-14 border-2 border-default-200 data-[hover=true]:border-default-400", // Force height to match toolbar
-                        label: "text-[10px] font-medium text-default-500",
+                        trigger: "h-14 min-h-14 border-2 border-slate-300 dark:border-default-200 data-[hover=true]:border-slate-400 dark:data-[hover=true]:border-default-400 bg-white dark:bg-content2", // Force height to match toolbar and custom border
+                        label: "text-[10px] font-medium text-slate-500 dark:text-default-500",
                         value: "text-small"
                     }}
                     items={entitySets.map(e => ({ key: e, label: e }))}

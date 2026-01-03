@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useState, useContext } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals, useReactFlow } from 'reactflow';
 import { Button } from "@nextui-org/button";
@@ -130,8 +131,8 @@ export const EntityNode = React.memo(({ id, data, selected }: NodeProps) => {
       <div 
         className={`
           relative flex flex-col
-          border-2 rounded-lg min-w-[240px] max-w-[300px] bg-content1 transition-all
-          ${selected ? 'border-primary shadow-2xl ring-2 ring-primary/30' : 'border-divider shadow-sm'}
+          border-2 rounded-lg min-w-[240px] max-w-[300px] bg-white dark:bg-content1 transition-all
+          ${selected ? 'border-primary shadow-2xl ring-2 ring-primary/30' : 'border-slate-300 dark:border-divider shadow-lg dark:shadow-sm'}
         `}
         // REMOVED: onMouseDown={() => addActiveEntity(id)} 
         // We only want explicit clicks on the name to trigger the table, or clicking the table itself.
@@ -157,7 +158,7 @@ export const EntityNode = React.memo(({ id, data, selected }: NodeProps) => {
 
         {/* --- Entity Title Header --- */}
         <div 
-            className="bg-primary/10 p-2 font-bold text-center border-b border-divider text-sm text-primary rounded-t-md flex items-center justify-center gap-2 group transition-colors"
+            className="bg-blue-50 dark:bg-primary/10 p-2 font-bold text-center border-b border-slate-300 dark:border-divider text-sm text-blue-700 dark:text-primary rounded-t-md flex items-center justify-center gap-2 group transition-colors"
             // REMOVED: onClick handler from the container div
         >
           <Table2 size={14} />
@@ -172,7 +173,7 @@ export const EntityNode = React.memo(({ id, data, selected }: NodeProps) => {
         </div>
 
         {/* --- Entity Content Area --- */}
-        <div className="p-2 flex flex-col gap-0.5 bg-content1 rounded-b-md">
+        <div className="p-2 flex flex-col gap-0.5 bg-white dark:bg-content1 rounded-b-md">
           {/* Properties */}
           {visibleProperties.map((prop: EntityProperty) => {
             const fieldColor = data.fieldColors?.[prop.name];
@@ -185,14 +186,14 @@ export const EntityNode = React.memo(({ id, data, selected }: NodeProps) => {
                 key={prop.name} 
                 className={`
                   text-[10px] flex items-center justify-between p-1.5 rounded-sm border-l-2 transition-colors group
-                  ${isKey ? 'bg-warning/10 text-warning-700 font-semibold' : 'text-default-600'}
+                  ${isKey ? 'bg-orange-50 dark:bg-warning/10 text-orange-800 dark:text-warning-700 font-semibold' : 'text-slate-700 dark:text-default-600'}
                   ${fieldColor ? '' : 'border-transparent'}
                 `}
                 style={fieldColor ? { borderColor: fieldColor, backgroundColor: `${fieldColor}15` } : {}}
               >
                 <span className="flex items-center gap-1.5 truncate max-w-[140px]">
-                  {isKey && <Key size={8} className="shrink-0 text-warning" />}
-                  {fkInfo && <Link2 size={8} className="shrink-0 text-secondary" />}
+                  {isKey && <Key size={8} className="shrink-0 text-orange-600 dark:text-warning" />}
+                  {fkInfo && <Link2 size={8} className="shrink-0 text-purple-600 dark:text-secondary" />}
                   
                   {/* Property Details Popover (Controlled) */}
                   <Popover 
@@ -304,7 +305,7 @@ export const EntityNode = React.memo(({ id, data, selected }: NodeProps) => {
                       </PopoverContent>
                   </Popover>
                 </span>
-                <span className="text-[9px] text-default-400 ml-1 opacity-70 font-mono">{prop.type.split('.').pop()}</span>
+                <span className="text-[9px] text-slate-400 dark:text-default-400 ml-1 opacity-70 font-mono">{prop.type.split('.').pop()}</span>
               </div>
             );
           })}
@@ -312,7 +313,7 @@ export const EntityNode = React.memo(({ id, data, selected }: NodeProps) => {
           {/* Expand/Collapse */}
           {!isExpanded && hiddenCount > 0 && (
               <div 
-                  className="text-[9px] text-primary cursor-pointer hover:bg-primary/5 p-1 rounded text-center flex items-center justify-center gap-1 transition-colors mt-1 border border-dashed border-divider hover:border-primary/50"
+                  className="text-[9px] text-primary cursor-pointer hover:bg-primary/5 p-1 rounded text-center flex items-center justify-center gap-1 transition-colors mt-1 border border-dashed border-slate-200 dark:border-divider hover:border-primary/50"
                   onClick={(e) => { e.stopPropagation(); setIsExpanded(true); }}
               >
                   <ChevronDown size={10} />
@@ -321,7 +322,7 @@ export const EntityNode = React.memo(({ id, data, selected }: NodeProps) => {
           )}
           {isExpanded && hiddenCount > 0 && (
               <div 
-                  className="text-[9px] text-default-400 cursor-pointer hover:bg-default-100 p-1 rounded text-center flex items-center justify-center gap-1 transition-colors mt-1"
+                  className="text-[9px] text-slate-400 dark:text-default-400 cursor-pointer hover:bg-slate-100 dark:hover:bg-default-100 p-1 rounded text-center flex items-center justify-center gap-1 transition-colors mt-1"
                   onClick={(e) => { e.stopPropagation(); setIsExpanded(false); }}
               >
                   <ChevronUp size={10} />
@@ -331,30 +332,30 @@ export const EntityNode = React.memo(({ id, data, selected }: NodeProps) => {
 
           {/* Navigation Properties */}
           {data.navigationProperties && data.navigationProperties.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-divider/50">
-                  <div className="text-[9px] font-bold text-default-400 mb-1.5 px-1 uppercase tracking-wider flex items-center gap-2">
+              <div className="mt-2 pt-2 border-t border-slate-200 dark:border-divider/50">
+                  <div className="text-[9px] font-bold text-slate-400 dark:text-default-400 mb-1.5 px-1 uppercase tracking-wider flex items-center gap-2">
                       <span>Navigation</span>
-                      <div className="h-px bg-divider flex-1"></div>
+                      <div className="h-px bg-slate-200 dark:bg-divider flex-1"></div>
                   </div>
-                  <div className="bg-secondary/10 rounded-md p-1 border border-secondary/10 flex flex-col gap-1">
+                  <div className="bg-purple-50 dark:bg-secondary/10 rounded-md p-1 border border-purple-100 dark:border-secondary/10 flex flex-col gap-1">
                       {data.navigationProperties.slice(0, 8).map((nav: any) => {
                           const cleanType = nav.targetType?.replace('Collection(', '').replace(')', '').split('.').pop();
                           return (
                               <div 
                                   key={nav.name} 
-                                  className="group flex items-center justify-start gap-2 p-1.5 rounded-sm bg-content1/50 hover:bg-content1 hover:shadow-sm border border-transparent hover:border-secondary/20 transition-all cursor-pointer text-secondary-700"
+                                  className="group flex items-center justify-start gap-2 p-1.5 rounded-sm bg-white/50 dark:bg-content1/50 hover:bg-white dark:hover:bg-content1 hover:shadow-sm border border-transparent hover:border-purple-200 dark:hover:border-secondary/20 transition-all cursor-pointer text-purple-800 dark:text-secondary-700"
                                   onClick={(e) => { e.stopPropagation(); handleJumpToEntity(cleanType, false); }}
                                   title={`Jump to ${cleanType}`}
                               >
                                   <span className="flex items-center gap-1.5 truncate w-full">
-                                      <ArrowRightCircle size={10} className="shrink-0 text-secondary opacity-70 group-hover:opacity-100 transition-opacity" />
+                                      <ArrowRightCircle size={10} className="shrink-0 text-purple-600 dark:text-secondary opacity-70 group-hover:opacity-100 transition-opacity" />
                                       <span className="font-medium text-[10px]">{nav.name}</span>
                                   </span>
                               </div>
                           );
                       })}
                       {data.navigationProperties.length > 8 && (
-                          <div className="text-[9px] text-secondary-400 text-center pt-1 italic">
+                          <div className="text-[9px] text-purple-400 dark:text-secondary-400 text-center pt-1 italic">
                               + {data.navigationProperties.length - 8} more relations
                           </div>
                       )}
@@ -376,14 +377,14 @@ export const EntityNode = React.memo(({ id, data, selected }: NodeProps) => {
             onMouseDown={() => addActiveEntity(id)}
             onClick={(e) => e.stopPropagation()}
         >
-            <div className="bg-content1 rounded-lg shadow-2xl border border-divider overflow-hidden flex flex-col max-h-[600px] ring-1 ring-black/5">
+            <div className="bg-white dark:bg-content1 rounded-lg shadow-2xl border border-slate-300 dark:border-divider overflow-hidden flex flex-col max-h-[600px] ring-1 ring-black/5">
                 <div 
-                    className="flex justify-between items-center p-3 bg-default-100 border-b border-divider shrink-0"
+                    className="flex justify-between items-center p-3 bg-slate-50 dark:bg-default-100 border-b border-slate-300 dark:border-divider shrink-0"
                 >
-                    <div className="flex items-center gap-3 font-bold text-default-700 text-sm">
+                    <div className="flex items-center gap-3 font-bold text-slate-700 dark:text-default-700 text-sm">
                         <Database size={18} className="text-primary"/>
                         {data.label}
-                        <span className="text-xs font-normal text-default-500 bg-white px-1.5 rounded border border-divider">{data.namespace}</span>
+                        <span className="text-xs font-normal text-slate-500 dark:text-default-500 bg-white px-1.5 rounded border border-slate-300 dark:border-divider">{data.namespace}</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <Button size="sm" variant="flat" color="primary" onPress={handleExportCSV} startContent={<Download size={14} />}>
@@ -395,7 +396,7 @@ export const EntityNode = React.memo(({ id, data, selected }: NodeProps) => {
                     </div>
                 </div>
                 
-                <ScrollShadow className="flex-1 overflow-auto bg-content1" size={10}>
+                <ScrollShadow className="flex-1 overflow-auto bg-white dark:bg-content1" size={10}>
                         <EntityDetailsTable 
                             properties={data.properties} 
                             keys={data.keys} 
@@ -408,7 +409,7 @@ export const EntityNode = React.memo(({ id, data, selected }: NodeProps) => {
                         />
                 </ScrollShadow>
                 
-                <div className="bg-default-50 p-2 text-xs text-default-500 text-center border-t border-divider shrink-0 flex justify-between px-4">
+                <div className="bg-slate-50 dark:bg-default-50 p-2 text-xs text-slate-500 dark:text-default-500 text-center border-t border-slate-300 dark:border-divider shrink-0 flex justify-between px-4">
                     <span>{data.properties.length} Properties</span>
                     <span>{data.navigationProperties?.length || 0} Relations</span>
                 </div>

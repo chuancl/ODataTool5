@@ -90,7 +90,7 @@ export const ResultTabs: React.FC<ResultTabsProps> = ({
     };
 
     return (
-        <div className="flex-1 min-h-0 bg-content1 rounded-xl border border-divider overflow-hidden flex flex-col shadow-sm">
+        <div className="flex-1 min-h-0 bg-white dark:bg-content1 rounded-xl border border-slate-300 dark:border-divider overflow-hidden flex flex-col shadow-md dark:shadow-sm">
             {/* Navigation Tabs (Controller) */}
             <Tabs
                 aria-label="Result Options"
@@ -99,10 +99,10 @@ export const ResultTabs: React.FC<ResultTabsProps> = ({
                 selectedKey={activeTab}
                 onSelectionChange={(k) => setActiveTab(k as string)}
                 classNames={{
-                    tabList: "gap-6 w-full relative rounded-none p-0 border-b border-divider px-4 bg-default-100",
+                    tabList: "gap-6 w-full relative rounded-none p-0 border-b border-slate-200 dark:border-divider px-4 bg-slate-100 dark:bg-default-100",
                     cursor: "w-full bg-primary",
-                    tab: "max-w-fit px-2 h-10 text-sm",
-                    tabContent: "group-data-[selected=true]:font-bold",
+                    tab: "max-w-fit px-2 h-10 text-sm text-slate-600 dark:text-default-500",
+                    tabContent: "group-data-[selected=true]:font-bold group-data-[selected=true]:text-primary",
                     panel: "hidden" // Hide default logic
                 }}
             >
@@ -110,7 +110,7 @@ export const ResultTabs: React.FC<ResultTabsProps> = ({
                     <div className="flex items-center space-x-2">
                         <TableIcon size={14} />
                         <span>表格预览</span>
-                        <Chip size="sm" variant="flat" className="h-4 text-[10px] px-1 ml-1">{queryResult.length}</Chip>
+                        <Chip size="sm" variant="flat" className="h-4 text-[10px] px-1 ml-1 bg-white dark:bg-content2 border border-slate-200 dark:border-transparent">{queryResult.length}</Chip>
                     </div>
                 } />
                 <Tab key="json" title={
@@ -153,9 +153,9 @@ export const ResultTabs: React.FC<ResultTabsProps> = ({
 
                 {/* 2. JSON Preview */}
                 <div className="absolute inset-0 flex flex-col" style={{ display: activeTab === 'json' ? 'flex' : 'none', visibility: activeTab === 'json' ? 'visible' : 'hidden' }}>
-                    <div className="p-2 border-b border-divider flex justify-between items-center shrink-0 bg-content2">
+                    <div className="p-2 border-b border-slate-200 dark:border-divider flex justify-between items-center shrink-0 bg-slate-50 dark:bg-content2">
                         <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold px-2 text-warning-500">
+                            <span className="text-xs font-bold px-2 text-warning-600 dark:text-warning-500">
                                 {enableJsonEdit ? "JSON 编辑 (Blur to Sync)" : "JSON 响应结果"}
                             </span>
                             {jsonError && (
@@ -197,8 +197,8 @@ export const ResultTabs: React.FC<ResultTabsProps> = ({
                 {/* 3. XML Preview */}
                 {!hideXmlTab && (
                     <div className="absolute inset-0 flex flex-col" style={{ display: activeTab === 'xml' ? 'flex' : 'none', visibility: activeTab === 'xml' ? 'visible' : 'hidden' }}>
-                        <div className="p-2 border-b border-divider flex justify-between items-center shrink-0 bg-content2">
-                            <span className="text-xs font-bold px-2 text-primary-500">XML / Atom 响应结果</span>
+                        <div className="p-2 border-b border-slate-200 dark:border-divider flex justify-between items-center shrink-0 bg-slate-50 dark:bg-content2">
+                            <span className="text-xs font-bold px-2 text-blue-600 dark:text-primary-500">XML / Atom 响应结果</span>
                             <div className="flex gap-1">
                                 <Button isIconOnly size="sm" variant="light" onPress={() => downloadFile(rawXmlResult, 'result.xml', 'xml')} title="导出 XML">
                                     <Download size={14} />

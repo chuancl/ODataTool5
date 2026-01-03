@@ -37,25 +37,25 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
     if (!isRoot) return null;
 
     return (
-        <div className="bg-default-50 p-2 flex gap-2 border-b border-divider items-center justify-between shrink-0 h-12">
+        <div className="bg-slate-50 dark:bg-default-50 p-2 flex gap-2 border-b border-slate-300 dark:border-divider items-center justify-between shrink-0 h-12">
              <div className="flex items-center gap-2">
                 {/* Header Left Content */}
                 {isEditing && (
-                    <Chip size="sm" color="warning" variant="flat" className="animate-pulse">编辑模式 (Editing)</Chip>
+                    <Chip size="sm" color="warning" variant="flat" className="animate-pulse font-bold">编辑模式 (Editing)</Chip>
                 )}
              </div>
              
              <div className="flex gap-2">
                  {/* Create Button: Only for Root or if specifically enabled/needed */}
                 {onCreate && (
-                    <Button size="sm" color="primary" variant="solid" onPress={onCreate} startContent={<Plus size={14} />}>
+                    <Button size="sm" color="primary" variant="solid" onPress={onCreate} startContent={<Plus size={14} />} className="shadow-md shadow-primary/20">
                         新增选中 (Create Selected)
                     </Button>
                 )}
 
                 {/* 1. Modify Button: Show only if enabled and not editing */}
                 {enableEdit && !isEditing && (
-                    <Button size="sm" variant="flat" onPress={onStartEdit} startContent={<Pencil size={14} />}>
+                    <Button size="sm" variant="flat" onPress={onStartEdit} startContent={<Pencil size={14} />} className="bg-white dark:bg-default-100 border border-slate-300 dark:border-transparent">
                         修改 (Modify)
                     </Button>
                 )}
@@ -64,11 +64,11 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
                 {enableEdit && isEditing && (
                     <>
                         {!hideUpdateButton && (
-                            <Button size="sm" color="success" variant="solid" className="text-white" onPress={onConfirmUpdate} startContent={<Check size={14} />}>
+                            <Button size="sm" color="success" variant="solid" className="text-white shadow-md shadow-success/20" onPress={onConfirmUpdate} startContent={<Check size={14} />}>
                                 更新 (Update)
                             </Button>
                         )}
-                        <Button size="sm" color="default" variant="flat" onPress={onCancelEdit} startContent={<X size={14} />}>
+                        <Button size="sm" color="default" variant="flat" onPress={onCancelEdit} startContent={<X size={14} />} className="bg-white dark:bg-default-100 border border-slate-300 dark:border-transparent">
                             取消 (Cancel)
                         </Button>
                     </>
