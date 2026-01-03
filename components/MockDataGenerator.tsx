@@ -50,6 +50,9 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
   
   // 数据状态
   const [mockData, setMockData] = useState<any[]>([]);
+  
+  // 表格编辑草稿 (用于同步 JSON)
+  const [currentDraft, setCurrentDraft] = useState<Record<number, Record<string, any>>>({});
 
   // 1. 初始化实体列表
   useEffect(() => {
@@ -113,6 +116,7 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
       });
       setFieldConfigs(initialConfig);
       setMockData([]); // 清空旧数据
+      setCurrentDraft({}); // 清空草稿
   }, [currentSchema]);
 
   // 5. 生成数据核心逻辑
@@ -148,6 +152,7 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
       return row;
     });
     setMockData(newData);
+    setCurrentDraft({}); // 生成新数据时重置草稿
   };
 
   // 6. Action Hook 集成
@@ -183,6 +188,22 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
       document.body.removeChild(link);
       URL.revokeObjectURL(u);
   };
+
+  // 7. 计算实时 JSON (合并原始数据和草稿)
+  const mergedJson = useMemo(() => {
+      if (mockData.length === 0) return '[]';
+      
+      const merged = mockData.map((item, index) => {
+          const draft = currentDraft[index];
+          if (!draft) return item;
+          // 合并修改，排除内部字段 (id, __selected)
+          const newItem = { ...item, ...draft };
+          // 确保显示时也不包含内部 id 字段 (如果不需要导出)
+          // 这里保留 id 以便追踪，但实际创建时会清理
+          return newItem;
+      });
+      return JSON.stringify(merged, null, 2);
+  }, [mockData, currentDraft]);
 
   return (
     <div className="flex flex-col gap-4 h-full relative">
@@ -269,7 +290,7 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
           {/* 右侧：数据展示区 (使用 ResultTabs 复用) */}
           <ResultTabs 
              queryResult={mockData}
-             rawJsonResult={JSON.stringify(mockData, null, 2)}
+             rawJsonResult={mergedJson} // 传递合并了实时修改的 JSON
              rawXmlResult="" // Mock data usually json only
              loading={false}
              isDark={isDark}
@@ -284,6 +305,8 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
              enableEdit={true}
              enableDelete={false}
              hideUpdateButton={true}
+             hideXmlTab={true} // 隐藏 XML 预览
+             onDraftChange={setCurrentDraft} // 监听表格修改
           />
       </div>
 

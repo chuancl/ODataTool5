@@ -38,6 +38,7 @@ interface RecursiveDataTableProps {
     enableEdit?: boolean; // 新增：控制是否允许编辑
     enableDelete?: boolean; // 新增：控制是否允许删除
     hideUpdateButton?: boolean; // 新增：在编辑模式下隐藏更新按钮 (用于 Mock Data)
+    onDraftChange?: (draft: Record<number, Record<string, any>>) => void; // 新增：Draft 变更回调
 }
 
 export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({ 
@@ -54,7 +55,8 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
     schema,
     enableEdit = true,
     enableDelete = true,
-    hideUpdateButton = false
+    hideUpdateButton = false,
+    onDraftChange
 }) => {
     const tableContainerRef = useRef<HTMLDivElement>(null);
     const [containerWidth, setContainerWidth] = useState(() => {
@@ -85,7 +87,9 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
             }
         });
         setRowSelection(newSelection);
+        // Reset draft when data changes drastically, but be careful not to wipe during local updates if data ref implies same data
         setEditDraft({});
+        onDraftChange?.({});
         setIsEditing(false);
     }, [data, parentSelected]);
 
@@ -153,6 +157,7 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
     const handleCancelEdit = () => {
         setIsEditing(false);
         setEditDraft({});
+        onDraftChange?.({});
     };
 
     const handleConfirmUpdate = () => {
@@ -202,13 +207,17 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
     };
 
     const handleInputChange = (rowIndex: number, columnId: string, value: any) => {
-        setEditDraft(prev => ({
-            ...prev,
-            [rowIndex]: {
-                ...(prev[rowIndex] || {}),
-                [columnId]: value
-            }
-        }));
+        setEditDraft(prev => {
+            const next = {
+                ...prev,
+                [rowIndex]: {
+                    ...(prev[rowIndex] || {}),
+                    [columnId]: value
+                }
+            };
+            if (onDraftChange) onDraftChange(next);
+            return next;
+        });
         
         // 自动选中正在修改的行 (Auto-select row on edit)
         if (!rowSelection[rowIndex] && !rowSelection[String(rowIndex)]) {

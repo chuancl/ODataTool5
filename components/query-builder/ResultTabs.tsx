@@ -29,12 +29,16 @@ interface ResultTabsProps {
     enableEdit?: boolean;
     enableDelete?: boolean;
     hideUpdateButton?: boolean;
+    hideXmlTab?: boolean; // 新增：控制 XML Tab 显隐
+    onDraftChange?: (draft: Record<number, Record<string, any>>) => void; // 新增：传递 draft 回调
 }
 
 export const ResultTabs: React.FC<ResultTabsProps> = ({
     queryResult, rawJsonResult, rawXmlResult, loading, isDark,
     onDelete, onUpdate, onExport, downloadFile, entityName, schema,
-    onCreate, enableEdit, enableDelete, hideUpdateButton
+    onCreate, enableEdit, enableDelete, hideUpdateButton,
+    hideXmlTab = false,
+    onDraftChange
 }) => {
     const editorTheme = isDark ? vscodeDark : githubLight;
     
@@ -79,6 +83,7 @@ export const ResultTabs: React.FC<ResultTabsProps> = ({
                         enableEdit={enableEdit}
                         enableDelete={enableDelete}
                         hideUpdateButton={hideUpdateButton}
+                        onDraftChange={onDraftChange}
                     />
                 </Tab>
 
@@ -123,46 +128,48 @@ export const ResultTabs: React.FC<ResultTabsProps> = ({
                     </div>
                 </Tab>
 
-                {/* Tab 3: XML 预览 (CodeMirror) */}
-                <Tab
-                    key="xml"
-                    title={
-                        <div className="flex items-center space-x-2">
-                            <FileCode size={14} />
-                            <span>XML 预览</span>
-                        </div>
-                    }
-                >
-                    <div className="h-full flex flex-col">
-                        <div className="p-2 border-b border-divider flex justify-between items-center shrink-0 bg-content2">
-                            <span className="text-xs font-bold px-2 text-primary-500">XML / Atom 响应结果</span>
-                            <div className="flex gap-1">
-                                <Button isIconOnly size="sm" variant="light" onPress={() => downloadFile(rawXmlResult, 'result.xml', 'xml')} title="导出 XML">
-                                    <Download size={14} />
-                                </Button>
-                                <Button isIconOnly size="sm" variant="light" onPress={() => navigator.clipboard.writeText(rawXmlResult)} title="复制 XML">
-                                    <Copy size={14} />
-                                </Button>
+                {/* Tab 3: XML 预览 (CodeMirror) - Conditionally Rendered */}
+                {!hideXmlTab && (
+                    <Tab
+                        key="xml"
+                        title={
+                            <div className="flex items-center space-x-2">
+                                <FileCode size={14} />
+                                <span>XML 预览</span>
+                            </div>
+                        }
+                    >
+                        <div className="h-full flex flex-col">
+                            <div className="p-2 border-b border-divider flex justify-between items-center shrink-0 bg-content2">
+                                <span className="text-xs font-bold px-2 text-primary-500">XML / Atom 响应结果</span>
+                                <div className="flex gap-1">
+                                    <Button isIconOnly size="sm" variant="light" onPress={() => downloadFile(rawXmlResult, 'result.xml', 'xml')} title="导出 XML">
+                                        <Download size={14} />
+                                    </Button>
+                                    <Button isIconOnly size="sm" variant="light" onPress={() => navigator.clipboard.writeText(rawXmlResult)} title="复制 XML">
+                                        <Copy size={14} />
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="flex-1 overflow-hidden relative text-sm">
+                                <CodeMirror
+                                    value={rawXmlResult || '// 请先运行查询以获取结果'}
+                                    height="100%"
+                                    className="h-full [&_.cm-scroller]:overflow-scroll"
+                                    extensions={[xml()]}
+                                    theme={editorTheme}
+                                    readOnly={true}
+                                    editable={false}
+                                    basicSetup={{
+                                        lineNumbers: true,
+                                        foldGutter: true,
+                                        highlightActiveLine: false
+                                    }}
+                                />
                             </div>
                         </div>
-                        <div className="flex-1 overflow-hidden relative text-sm">
-                            <CodeMirror
-                                value={rawXmlResult || '// 请先运行查询以获取结果'}
-                                height="100%"
-                                className="h-full [&_.cm-scroller]:overflow-scroll"
-                                extensions={[xml()]}
-                                theme={editorTheme}
-                                readOnly={true}
-                                editable={false}
-                                basicSetup={{
-                                    lineNumbers: true,
-                                    foldGutter: true,
-                                    highlightActiveLine: false
-                                }}
-                            />
-                        </div>
-                    </div>
-                </Tab>
+                    </Tab>
+                )}
             </Tabs>
         </div>
     );
