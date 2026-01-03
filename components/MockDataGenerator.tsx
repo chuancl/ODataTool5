@@ -204,12 +204,17 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
           if (!draft) return item;
           // 合并修改，排除内部字段 (id, __selected)
           const newItem = { ...item, ...draft };
-          // 确保显示时也不包含内部 id 字段 (如果不需要导出)
-          // 这里保留 id 以便追踪，但实际创建时会清理
           return newItem;
       });
       return JSON.stringify(merged, null, 2);
   }, [mockData, currentDraft]);
+
+  // 处理 JSON 预览区的直接修改：同步回 Table
+  const handleJsonSync = (newData: any[]) => {
+      setMockData(newData);
+      // JSON 修改被视为"最终"修改，清空表格层面的草稿，避免冲突
+      setCurrentDraft({});
+  };
 
   return (
     <div className="flex flex-col gap-4 h-full relative">
@@ -313,6 +318,9 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
              hideUpdateButton={true}
              hideXmlTab={true} // 隐藏 XML 预览
              onDraftChange={setCurrentDraft} // 监听表格修改
+             // JSON Editing
+             enableJsonEdit={true}
+             onJsonChange={handleJsonSync}
           />
       </div>
 

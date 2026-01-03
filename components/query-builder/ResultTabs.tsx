@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Chip, Tabs, Tab } from "@nextui-org/react";
 import { 
     Table as TableIcon, Braces, Download, Copy, FileCode
@@ -31,6 +31,9 @@ interface ResultTabsProps {
     hideUpdateButton?: boolean;
     hideXmlTab?: boolean; // 新增：控制 XML Tab 显隐
     onDraftChange?: (draft: Record<number, Record<string, any>>) => void; // 新增：传递 draft 回调
+    // JSON Editing Props
+    enableJsonEdit?: boolean;
+    onJsonChange?: (data: any[]) => void;
 }
 
 export const ResultTabs: React.FC<ResultTabsProps> = ({
@@ -38,12 +41,40 @@ export const ResultTabs: React.FC<ResultTabsProps> = ({
     onDelete, onUpdate, onExport, downloadFile, entityName, schema,
     onCreate, enableEdit, enableDelete, hideUpdateButton,
     hideXmlTab = false,
-    onDraftChange
+    onDraftChange,
+    enableJsonEdit = false,
+    onJsonChange
 }) => {
     const editorTheme = isDark ? vscodeDark : githubLight;
     
     // Manage active tab state locally
     const [activeTab, setActiveTab] = useState<string>('table');
+
+    // --- JSON Editing Logic ---
+    const [jsonValue, setJsonValue] = useState(rawJsonResult);
+    const [isJsonFocused, setIsJsonFocused] = useState(false);
+
+    // Sync from prop ONLY when not focused (to prevent overwriting user typing with auto-formatted JSON)
+    useEffect(() => {
+        if (!isJsonFocused) {
+            setJsonValue(rawJsonResult);
+        }
+    }, [rawJsonResult, isJsonFocused]);
+
+    const handleJsonEditorChange = (val: string) => {
+        setJsonValue(val);
+        if (onJsonChange) {
+            try {
+                const parsed = JSON.parse(val);
+                // Only sync back if it's a valid array (matching OData list structure)
+                if (Array.isArray(parsed)) {
+                    onJsonChange(parsed);
+                }
+            } catch (e) {
+                // Ignore parse errors while typing
+            }
+        }
+    };
 
     return (
         <div className="flex-1 min-h-0 bg-content1 rounded-xl border border-divider overflow-hidden flex flex-col shadow-sm">
@@ -73,6 +104,7 @@ export const ResultTabs: React.FC<ResultTabsProps> = ({
                     <div className="flex items-center space-x-2">
                         <Braces size={14} />
                         <span>JSON 预览</span>
+                        {enableJsonEdit && <Chip size="sm" color="warning" variant="dot" className="h-4 text-[10px] border-0">Editable</Chip>}
                     </div>
                 } />
                 {!hideXmlTab && <Tab key="xml" title={
@@ -109,25 +141,30 @@ export const ResultTabs: React.FC<ResultTabsProps> = ({
                 {/* 2. JSON Preview */}
                 <div className="absolute inset-0 flex flex-col" style={{ display: activeTab === 'json' ? 'flex' : 'none', visibility: activeTab === 'json' ? 'visible' : 'hidden' }}>
                     <div className="p-2 border-b border-divider flex justify-between items-center shrink-0 bg-content2">
-                        <span className="text-xs font-bold px-2 text-warning-500">JSON 响应结果</span>
+                        <span className="text-xs font-bold px-2 text-warning-500">
+                            {enableJsonEdit ? "JSON 编辑 (Auto-Sync to Table)" : "JSON 响应结果"}
+                        </span>
                         <div className="flex gap-1">
-                            <Button isIconOnly size="sm" variant="light" onPress={() => downloadFile(rawJsonResult, 'result.json', 'json')} title="导出 JSON">
+                            <Button isIconOnly size="sm" variant="light" onPress={() => downloadFile(jsonValue, 'result.json', 'json')} title="导出 JSON">
                                 <Download size={14} />
                             </Button>
-                            <Button isIconOnly size="sm" variant="light" onPress={() => navigator.clipboard.writeText(rawJsonResult)} title="复制 JSON">
+                            <Button isIconOnly size="sm" variant="light" onPress={() => navigator.clipboard.writeText(jsonValue)} title="复制 JSON">
                                 <Copy size={14} />
                             </Button>
                         </div>
                     </div>
                     <div className="flex-1 overflow-hidden relative text-sm">
                         <CodeMirror
-                            value={rawJsonResult || '// 请先运行查询以获取结果'}
+                            value={jsonValue || '// 请先生成数据'}
                             height="100%"
                             className="h-full [&_.cm-scroller]:overflow-scroll"
                             extensions={[json()]}
                             theme={editorTheme}
-                            readOnly={true}
-                            editable={false}
+                            readOnly={!enableJsonEdit}
+                            editable={enableJsonEdit}
+                            onChange={handleJsonEditorChange}
+                            onFocus={() => setIsJsonFocused(true)}
+                            onBlur={() => setIsJsonFocused(false)}
                             basicSetup={{
                                 lineNumbers: true,
                                 foldGutter: true,
