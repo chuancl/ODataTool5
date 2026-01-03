@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Button, Input, Card, CardBody, Select, SelectItem, ScrollShadow, SelectSection, Accordion, AccordionItem, Popover, PopoverTrigger, PopoverContent } from "@nextui-org/react";
+import { Button, Input, Card, CardBody, Select, SelectItem, ScrollShadow, SelectSection, Accordion, AccordionItem, Popover, PopoverTrigger, PopoverContent, Chip } from "@nextui-org/react";
 import { ODataVersion, ParsedSchema } from '@/utils/odata-helper';
-import { Sparkles, Settings2, RefreshCw, Plus, Trash2 } from 'lucide-react';
+import { Sparkles, Settings2, RefreshCw, Plus, Trash2, AlertTriangle, Info } from 'lucide-react';
 import { useEntityActions } from './query-builder/hooks/useEntityActions';
 import { CodeModal } from './query-builder/CodeModal';
 import { ResultTabs } from './query-builder/ResultTabs';
@@ -10,8 +10,8 @@ import {
     flattenEntityProperties, 
     suggestStrategy, 
     generateValue, 
-    getStrategiesForType, 
-    ALL_STRATEGIES,
+    getGroupedStrategies,
+    isStrategyCompatible,
     MockFieldConfig,
     AutoIncrementConfig
 } from './mock-data/mock-utils';
@@ -188,16 +188,8 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
 
   // --- UI Components ---
   
-  // 按类别分组策略
-  const groupStrategies = (type: string) => {
-      const strategies = getStrategiesForType(type);
-      const groups: Record<string, typeof strategies> = {};
-      strategies.forEach(s => {
-          if (!groups[s.category]) groups[s.category] = [];
-          groups[s.category].push(s);
-      });
-      return groups;
-  };
+  // 按类别分组策略 (Memoized to avoid recalc)
+  const groupedStrategies = useMemo(() => getGroupedStrategies(), []);
 
   return (
     <div className="flex flex-col gap-4 h-full relative">
@@ -248,7 +240,7 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
                         {flatProperties.map(fp => {
                             const conf = configs[fp.path];
                             if (!conf) return null;
-                            const groups = groupStrategies(fp.property.type);
+                            const isCompatible = isStrategyCompatible(conf.strategy, fp.property.type);
                             
                             return (
                                 <div key={fp.path} className="flex flex-col gap-1 border-b border-divider/50 pb-3 last:border-0">
@@ -257,7 +249,10 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
                                             {fp.path}
                                             {fp.property.nullable === false && <span className="text-danger ml-1">*</span>}
                                         </label>
-                                        <span className="text-[9px] text-default-400 font-mono bg-default-100 px-1 rounded">{fp.property.type.split('.').pop()}</span>
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-[9px] text-default-400 font-mono bg-default-100 px-1 rounded">{fp.property.type.split('.').pop()}</span>
+                                            {!isCompatible && <AlertTriangle size={10} className="text-warning" />}
+                                        </div>
                                     </div>
                                     
                                     <Select 
@@ -266,20 +261,43 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
                                         variant="faded" 
                                         selectedKeys={[conf.strategy]}
                                         onChange={(e) => updateConfig(fp.path, { strategy: e.target.value })}
-                                        classNames={{ trigger: "h-8 min-h-8 px-2", value: "text-[11px]" }}
+                                        classNames={{ 
+                                            trigger: "h-8 min-h-8 px-2", 
+                                            value: `text-[11px] ${!isCompatible ? 'text-warning-600 font-medium' : ''}` 
+                                        }}
+                                        renderValue={(items) => {
+                                            return items.map(item => (
+                                                <div key={item.key} className="flex items-center gap-1">
+                                                    {!isCompatible && <AlertTriangle size={12} className="text-warning" />}
+                                                    <span>{item.textValue}</span>
+                                                </div>
+                                            ));
+                                        }}
                                     >
-                                        {Object.entries(groups).map(([category, items]) => (
+                                        {Object.entries(groupedStrategies).map(([category, items]) => (
                                             <SelectSection key={category} title={category} classNames={{ heading: "text-[10px] font-bold text-primary/80 uppercase" }}>
-                                                {items.map(opt => (
-                                                    <SelectItem key={opt.value} value={opt.value} textValue={opt.label}>
-                                                        <span className="text-[11px]">{opt.label}</span>
-                                                    </SelectItem>
-                                                ))}
+                                                {items.map(opt => {
+                                                    const itemCompatible = isStrategyCompatible(opt.value, fp.property.type);
+                                                    return (
+                                                        <SelectItem key={opt.value} value={opt.value} textValue={opt.label}>
+                                                            <div className="flex justify-between items-center w-full gap-2">
+                                                                <span className={`text-[11px] ${!itemCompatible ? 'text-default-400 line-through decoration-default-300' : ''}`}>
+                                                                    {opt.label}
+                                                                </span>
+                                                                {!itemCompatible && (
+                                                                    <Chip size="sm" color="warning" variant="flat" className="h-4 text-[9px] px-1 min-w-min">
+                                                                        Type mismatch
+                                                                    </Chip>
+                                                                )}
+                                                            </div>
+                                                        </SelectItem>
+                                                    );
+                                                })}
                                             </SelectSection>
                                         ))}
                                     </Select>
 
-                                    {/* Auto-Increment Settings */}
+                                    {/* Auto-Increment Settings - Always visible for 'custom.increment' */}
                                     {conf.strategy === 'custom.increment' && (
                                         <div className="grid grid-cols-2 gap-2 mt-1 bg-default-50 p-2 rounded border border-divider">
                                             <Input 
@@ -294,22 +312,18 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
                                                 value={String(conf.incrementConfig?.step)}
                                                 onValueChange={(v) => updateIncrementConfig(fp.path, 'step', Number(v))}
                                             />
-                                            {fp.property.type === 'Edm.String' && (
-                                                <>
-                                                    <Input 
-                                                        label="Prefix" size="sm" variant="bordered"
-                                                        classNames={{ input: "text-[10px]", label: "text-[9px]" }}
-                                                        value={conf.incrementConfig?.prefix}
-                                                        onValueChange={(v) => updateIncrementConfig(fp.path, 'prefix', v)}
-                                                    />
-                                                    <Input 
-                                                        label="Suffix" size="sm" variant="bordered"
-                                                        classNames={{ input: "text-[10px]", label: "text-[9px]" }}
-                                                        value={conf.incrementConfig?.suffix}
-                                                        onValueChange={(v) => updateIncrementConfig(fp.path, 'suffix', v)}
-                                                    />
-                                                </>
-                                            )}
+                                            <Input 
+                                                label="Prefix" size="sm" variant="bordered"
+                                                classNames={{ input: "text-[10px]", label: "text-[9px]" }}
+                                                value={conf.incrementConfig?.prefix}
+                                                onValueChange={(v) => updateIncrementConfig(fp.path, 'prefix', v)}
+                                            />
+                                            <Input 
+                                                label="Suffix" size="sm" variant="bordered"
+                                                classNames={{ input: "text-[10px]", label: "text-[9px]" }}
+                                                value={conf.incrementConfig?.suffix}
+                                                onValueChange={(v) => updateIncrementConfig(fp.path, 'suffix', v)}
+                                            />
                                         </div>
                                     )}
                                 </div>

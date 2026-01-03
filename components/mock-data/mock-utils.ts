@@ -91,7 +91,25 @@ export const ALL_STRATEGIES = [...COMMON_STRATEGIES, ...FAKER_DEFINITIONS];
 
 // --- 2. 辅助函数 ---
 
-// 获取适用于特定类型的策略
+// 检查策略是否与字段类型兼容
+export const isStrategyCompatible = (strategyValue: string, odataType: string): boolean => {
+    const strategy = ALL_STRATEGIES.find(s => s.value === strategyValue);
+    if (!strategy) return false;
+    if (!strategy.allowedTypes) return true; // 通用类型 (如 Null)
+    return strategy.allowedTypes.includes(odataType);
+};
+
+// 获取全部分组策略
+export const getGroupedStrategies = () => {
+    const groups: Record<string, MockStrategy[]> = {};
+    ALL_STRATEGIES.forEach(s => {
+        if (!groups[s.category]) groups[s.category] = [];
+        groups[s.category].push(s);
+    });
+    return groups;
+};
+
+// 获取适用于特定类型的策略 (Legacy)
 export const getStrategiesForType = (odataType: string) => {
     return ALL_STRATEGIES.filter(s => {
         if (!s.allowedTypes) return true; // 通用类型 (如 Null)
@@ -110,17 +128,13 @@ export const flattenEntityProperties = (
     entity.properties.forEach(p => {
         const currentPath = prefix ? `${prefix}.${p.name}` : p.name;
         
-        // 检查是否为 ComplexType (即在 schema.entities 中定义了该类型，且不是导航属性)
-        // OData V2/V4 的 ComplexType 定义通常也是 EntityType 结构，但没有 Key
-        // 这里简单通过名称匹配来判断
+        // 检查是否为 ComplexType
         const complexTypeName = p.type.split('.').pop() || '';
         const complexType = schema.entities.find(e => e.name === complexTypeName);
 
         if (complexType) {
-            // 递归处理 ComplexType
             results = results.concat(flattenEntityProperties(complexType, schema, currentPath));
         } else {
-            // 普通字段
             results.push({ path: currentPath, property: p });
         }
     });
@@ -183,10 +197,17 @@ export const generateValue = (
     if (strategy.type === 'custom.increment') {
         const conf = incrementConfig || { start: 1, step: 1, prefix: '', suffix: '' };
         const numVal = conf.start + (index * conf.step);
-        if (prop.type === 'Edm.String') {
-            return `${conf.prefix}${numVal}${conf.suffix}`;
+        
+        // 核心逻辑修改：如果用户配置了前缀或后缀，即使是数字类型字段，也尝试拼接字符串
+        // (后续 enforceConstraints 会尝试解析回数字，或者用户需要自己承担类型不匹配的后果)
+        const valStr = `${conf.prefix}${numVal}${conf.suffix}`;
+
+        // 如果字段非字符串类型，且没有配置前后缀，优先返回原始数字以保持精度
+        if (prop.type !== 'Edm.String' && !conf.prefix && !conf.suffix) {
+            return numVal;
         }
-        return numVal; // Number type
+
+        return valStr;
     }
 
     // B. 处理 Faker
@@ -224,8 +245,10 @@ const enforceConstraints = (val: any, prop: EntityProperty): any => {
 
     // 2. Number Constraints
     if (['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.Byte', 'Edm.SByte'].includes(type)) {
+        // 如果 val 是字符串 (例如带前缀的 "ID_1")，parseInt 会尝试解析
+        // "ID_1" -> NaN; "1_suffix" -> 1
         let num = typeof val === 'number' ? val : parseInt(val);
-        if (isNaN(num)) return 0;
+        if (isNaN(num)) return 0; // 解析失败回退为 0
 
         if (type === 'Edm.Byte') num = Math.abs(num) % 256;
         else if (type === 'Edm.SByte') {
@@ -243,6 +266,8 @@ const enforceConstraints = (val: any, prop: EntityProperty): any => {
     // 3. Decimal/Double
     if (['Edm.Decimal', 'Edm.Double', 'Edm.Single'].includes(type)) {
         let num = typeof val === 'number' ? val : parseFloat(val);
+        if (isNaN(num)) return 0;
+        
         if (prop.scale !== undefined && prop.scale >= 0) {
             num = parseFloat(num.toFixed(prop.scale));
         }
