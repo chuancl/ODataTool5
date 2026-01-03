@@ -1,5 +1,10 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Button, Tabs, Tab, ScrollShadow, Textarea, Tooltip, Card, CardBody } from "@nextui-org/react";
+import { Button } from "@nextui-org/button";
+import { Tabs, Tab } from "@nextui-org/tabs";
+import { ScrollShadow } from "@nextui-org/scroll-shadow";
+import { Textarea } from "@nextui-org/input";
+import { Tooltip } from "@nextui-org/tooltip";
+import { Card, CardBody } from "@nextui-org/card";
 import { EntityType } from '@/utils/odata-helper';
 import { Calculator, Calendar, Type, FunctionSquare, Braces, Eraser, Check, Link2, GripHorizontal, X, Scaling } from 'lucide-react';
 import { saveComponentGeometry, getComponentGeometry, ComponentGeometry } from '@/utils/storage';

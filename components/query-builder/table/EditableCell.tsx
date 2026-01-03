@@ -1,5 +1,7 @@
 import React from 'react';
-import { Input, Switch, Tooltip } from "@nextui-org/react";
+import { Input } from "@nextui-org/input";
+import { Switch } from "@nextui-org/switch";
+import { Tooltip } from "@nextui-org/tooltip";
 import { ContentRenderer } from '../ContentRenderer';
 import { isExpandableData, toInputDate, fromInputDate } from './utils';
 
@@ -84,7 +86,7 @@ export const EditableCell = ({ getValue, row, column, table }: any) => {
                          // 否则 (如 "1.", "007", "-0"), 存为 String，保留用户输入状态
                          if (String(num) === val) {
                              // 对于 Edm.Int64 和 Edm.Decimal，OData 经常推荐 String 传输以防精度丢失
-                             // 但如果用户输入的是简单数字，转为 Number 也是符合 JSON 标准的。
+                             // 但如果用户输入的是简单数字，转为 Number (JSON payload 更干净)
                              // 如果是 Int64 且数值极大，JS Number 会丢失精度，此时 String(num) !== val，会自动走 else 分支存 String
                              finalVal = num;
                          } else {

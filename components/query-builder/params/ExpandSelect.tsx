@@ -1,7 +1,9 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Select, SelectItem, Selection } from "@nextui-org/react";
+import React, { useState, useMemo, useEffect, Key } from 'react';
+import { Select, SelectItem } from "@nextui-org/select";
 import { ChevronRight, ChevronDown } from 'lucide-react';
 import { EntityType, ParsedSchema } from '@/utils/odata-helper';
+
+type Selection = "all" | Set<Key>;
 
 interface ExpandSelectProps {
     currentSchema: EntityType | null;

@@ -1,12 +1,17 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { Button, Input, Card, CardBody, Select, SelectItem, ScrollShadow } from "@nextui-org/react";
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Button } from "@nextui-org/button";
+import { Input } from "@nextui-org/input";
+import { Card, CardBody } from "@nextui-org/card";
+import { Select, SelectItem } from "@nextui-org/select";
+import { ScrollShadow } from "@nextui-org/scroll-shadow";
 import { ODataVersion, ParsedSchema } from '@/utils/odata-helper';
 import { Sparkles, Settings2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useEntityActions } from './query-builder/hooks/useEntityActions';
 import { CodeModal } from './query-builder/CodeModal';
 import { ResultTabs } from './query-builder/ResultTabs';
 import { StrategySelect } from './mock-data/StrategySelect';
+import { useToast } from '@/components/ui/ToastContext';
 import { 
     flattenEntityProperties, 
     suggestStrategy, 
@@ -38,6 +43,8 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
   const [mockData, setMockData] = useState<any[]>([]);
   const [currentDraft, setCurrentDraft] = useState<Record<number, Record<string, any>>>({});
 
+  const toast = useToast();
+
   // 1. 初始化实体列表
   useEffect(() => {
     if (!schema) return;
@@ -65,15 +72,10 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
       return entityType || null;
   }, [selectedEntity, schema]);
 
-  // 3. 当 Schema 变化时，重新扁平化并生成默认配置
-  useEffect(() => {
-      if (!currentSchema || !schema) return;
-      
-      const flattened = flattenEntityProperties(currentSchema, schema);
-      setFlatProperties(flattened);
-
+  // 辅助函数：生成默认配置
+  const generateDefaultConfigs = useCallback((props: { path: string, property: any }[]) => {
       const newConfigs: Record<string, MockFieldConfig> = {};
-      flattened.forEach(item => {
+      props.forEach(item => {
           newConfigs[item.path] = {
               path: item.path,
               property: item.property,
@@ -81,10 +83,20 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
               incrementConfig: { start: 1, step: 1, prefix: '', suffix: '' } // default
           };
       });
-      setConfigs(newConfigs);
+      return newConfigs;
+  }, []);
+
+  // 3. 当 Schema 变化时，重新扁平化并生成默认配置
+  useEffect(() => {
+      if (!currentSchema || !schema) return;
+      
+      const flattened = flattenEntityProperties(currentSchema, schema);
+      setFlatProperties(flattened);
+      setConfigs(generateDefaultConfigs(flattened));
+      
       setMockData([]);
       setCurrentDraft({});
-  }, [currentSchema, schema]);
+  }, [currentSchema, schema, generateDefaultConfigs]);
 
   // 4. 更新配置的 Helper
   const updateConfig = (path: string, updates: Partial<MockFieldConfig>) => {
@@ -105,6 +117,13 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
               }
           }
       }));
+  };
+
+  // 重置配置
+  const handleResetDefaults = () => {
+      if (flatProperties.length === 0) return;
+      setConfigs(generateDefaultConfigs(flatProperties));
+      toast.success("已重置所有字段为默认生成策略 (Reset to defaults)");
   };
 
   // 5. 生成数据核心逻辑
@@ -135,6 +154,7 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
     
     setMockData(newData);
     setCurrentDraft({});
+    toast.success(`Generated ${num} rows of data`);
   };
 
   // 6. Action Hook 集成
@@ -295,7 +315,7 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
              </ScrollShadow>
              
              <div className="p-2 border-t border-divider">
-                 <Button size="sm" variant="light" fullWidth onPress={() => { /* reset logic */ }} startContent={<RefreshCw size={14}/>}>
+                 <Button size="sm" variant="light" fullWidth onPress={handleResetDefaults} startContent={<RefreshCw size={14}/>}>
                      Reset to Defaults
                  </Button>
              </div>

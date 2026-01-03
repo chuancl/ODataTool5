@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Select, SelectItem, Selection } from "@nextui-org/react";
+import React, { useMemo, useState, Key } from 'react';
+import { Select, SelectItem } from "@nextui-org/select";
 import { EntityType, ParsedSchema } from '@/utils/odata-helper';
 import { FilterBuilderModal } from './FilterBuilderModal';
 
@@ -11,6 +11,8 @@ import { PaginationControls } from './params/PaginationControls';
 
 // 重新导出 SortItem 以保持兼容性
 export type { SortItem };
+
+type Selection = "all" | Set<Key>;
 
 interface ParamsFormProps {
     entitySets: string[];

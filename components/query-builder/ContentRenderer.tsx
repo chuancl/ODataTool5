@@ -1,5 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import { Image, Chip, Link, Button, Modal, ModalContent, ModalBody, ModalHeader, useDisclosure } from "@nextui-org/react";
+import { Image } from "@nextui-org/image";
+import { Chip } from "@nextui-org/chip";
+import { Link } from "@nextui-org/link";
+import { Button } from "@nextui-org/button";
+import { Modal, ModalContent, ModalBody, ModalHeader } from "@nextui-org/modal";
+import { useDisclosure } from "@nextui-org/use-disclosure";
 import { 
     FileImage, FileVideo, FileAudio, FileText, FileArchive, FileCode, 
     FileDigit, File, Download, Copy, Eye, Table2, Braces, Calendar 

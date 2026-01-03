@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { createColumnHelper } from '@tanstack/react-table';
-import { Checkbox, Tooltip } from "@nextui-org/react";
+import { Checkbox } from "@nextui-org/checkbox";
+import { Tooltip } from "@nextui-org/tooltip";
 import { ChevronDown, ChevronRight, Key, Link2 } from 'lucide-react';
 import { flexRender } from '@tanstack/react-table';
 import { isExpandableData, updateRecursiveSelection } from './utils';

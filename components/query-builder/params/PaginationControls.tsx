@@ -1,5 +1,6 @@
 import React from 'react';
-import { Switch, cn } from "@nextui-org/react";
+import { Switch } from "@nextui-org/switch";
+import { cn } from "@nextui-org/theme";
 import { Filter, XCircle } from 'lucide-react';
 
 interface PaginationControlsProps {

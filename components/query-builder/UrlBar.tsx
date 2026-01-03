@@ -1,5 +1,7 @@
 import React from 'react';
-import { Input, Button, Chip } from "@nextui-org/react";
+import { Input } from "@nextui-org/input";
+import { Button } from "@nextui-org/button";
+import { Chip } from "@nextui-org/chip";
 import { Copy, Play } from 'lucide-react';
 
 interface UrlBarProps {

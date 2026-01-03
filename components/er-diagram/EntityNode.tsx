@@ -1,6 +1,10 @@
 import React, { useCallback, useEffect, useState, useContext } from 'react';
 import { Handle, Position, NodeProps, useUpdateNodeInternals, useReactFlow } from 'reactflow';
-import { Button, Popover, PopoverTrigger, PopoverContent, ScrollShadow, Divider, Chip } from "@nextui-org/react";
+import { Button } from "@nextui-org/button";
+import { Popover, PopoverTrigger, PopoverContent } from "@nextui-org/popover";
+import { ScrollShadow } from "@nextui-org/scroll-shadow";
+import { Divider } from "@nextui-org/divider";
+import { Chip } from "@nextui-org/chip";
 import { Key, Link2, Info, X, ChevronDown, ChevronUp, ArrowRightCircle, Table2, Database, Zap, AlignJustify, Hash, CaseSensitive, Download } from 'lucide-react';
 import { EntityProperty } from '@/utils/odata-helper';
 import { EntityDetailsTable } from './EntityDetailsTable';

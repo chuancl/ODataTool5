@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
-import { Input, Select, SelectItem, Selection } from "@nextui-org/react";
+import React, { useMemo, Key } from 'react';
+import { Input } from "@nextui-org/input";
+import { Select, SelectItem } from "@nextui-org/select";
 import { Link2 } from 'lucide-react';
 import { EntityType } from '@/utils/odata-helper';
 
@@ -7,6 +8,8 @@ export interface SortItem {
     field: string;
     order: 'asc' | 'desc';
 }
+
+type Selection = "all" | Set<Key>;
 
 interface SortFieldsProps {
     currentSchema: EntityType | null;

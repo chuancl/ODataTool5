@@ -1,7 +1,10 @@
-import React, { useMemo } from 'react';
-import { Input, Select, SelectItem, Selection } from "@nextui-org/react";
+import React, { useMemo, Key } from 'react';
+import { Input } from "@nextui-org/input";
+import { Select, SelectItem } from "@nextui-org/select";
 import { CheckSquare, Link2 } from 'lucide-react';
 import { EntityType } from '@/utils/odata-helper';
+
+type Selection = "all" | Set<Key>;
 
 interface SelectFieldsProps {
     currentSchema: EntityType | null;
@@ -63,7 +66,7 @@ export const SelectFields: React.FC<SelectFieldsProps> = ({
             finalSelection = [];
         } else {
             newSet.delete(ALL_KEY);
-            finalSelection = Array.from(newSet).map(String);
+            finalSelection = Array.from(new Set(finalSelection)).map(String);
         }
 
         setSelect(Array.from(new Set(finalSelection)).join(','));

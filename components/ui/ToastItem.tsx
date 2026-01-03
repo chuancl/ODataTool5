@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { CheckCircle, AlertCircle, Info, AlertTriangle, X, Copy } from 'lucide-react';
-import { Button } from "@nextui-org/react";
+import { Button } from "@nextui-org/button";
 
 export interface ToastMessage {
   id: string;

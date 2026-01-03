@@ -1,7 +1,11 @@
 
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
-import { NextUIProvider, Tabs, Tab, Input, Button, Chip } from "@nextui-org/react";
+import { NextUIProvider } from "@nextui-org/system";
+import { Tabs, Tab } from "@nextui-org/tabs";
+import { Input } from "@nextui-org/input";
+import { Button } from "@nextui-org/button";
+import { Chip } from "@nextui-org/chip";
 import { detectODataVersion, parseMetadataToSchema, ODataVersion, ParsedSchema } from '@/utils/odata-helper';
 import ODataERDiagram from '@/components/ODataERDiagram';
 import QueryBuilder from '@/components/QueryBuilder';

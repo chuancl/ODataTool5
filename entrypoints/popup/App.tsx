@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
-import { NextUIProvider, Button, Input, Switch, Card, CardBody, Divider, ScrollShadow } from "@nextui-org/react";
+import { NextUIProvider } from "@nextui-org/system";
+import { Button } from "@nextui-org/button";
+import { Input } from "@nextui-org/input";
+import { Switch } from "@nextui-org/switch";
+import { Card, CardBody } from "@nextui-org/card";
+import { Divider } from "@nextui-org/divider";
+import { ScrollShadow } from "@nextui-org/scroll-shadow";
 import { getSettings, saveSettings, AppSettings } from '@/utils/storage';
 import { Settings, ExternalLink, Plus, Trash2, Globe } from 'lucide-react';
 import { browser } from 'wxt/browser';

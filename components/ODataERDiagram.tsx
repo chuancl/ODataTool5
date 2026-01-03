@@ -12,7 +12,9 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import ELK from 'elkjs/lib/elk.bundled.js';
 import { ParsedSchema } from '@/utils/odata-helper';
-import { Button, Spinner, Switch } from "@nextui-org/react";
+import { Button } from "@nextui-org/button";
+import { Spinner } from "@nextui-org/spinner";
+import { Switch } from "@nextui-org/switch";
 import { Zap } from 'lucide-react';
 import { calculateDynamicLayout } from './er-diagram/layout';
 import { EntityNode } from './er-diagram/EntityNode';

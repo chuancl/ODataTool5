@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Button, Chip, Tabs, Tab } from "@nextui-org/react";
+import { Button } from "@nextui-org/button";
+import { Chip } from "@nextui-org/chip";
+import { Tabs, Tab } from "@nextui-org/tabs";
 import { 
     Table as TableIcon, Braces, Download, Copy, FileCode, AlertCircle
 } from 'lucide-react';

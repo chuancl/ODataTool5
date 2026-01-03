@@ -1,6 +1,8 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { Select, SelectItem, Chip, Tooltip } from "@nextui-org/react";
+import { Select, SelectItem } from "@nextui-org/select";
+import { Chip } from "@nextui-org/chip";
+import { Tooltip } from "@nextui-org/tooltip";
 import { ChevronRight, ChevronDown, AlertTriangle } from 'lucide-react';
 import { 
     ALL_STRATEGIES, 
@@ -114,6 +116,8 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
                 const k = Array.from(keys)[0] as string;
                 if (k && !k.startsWith('CAT_')) onChange(k);
             }}
+            selectionMode="single"
+            disallowEmptySelection
             classNames={{ 
                 trigger: "h-8 min-h-8 px-2", 
                 value: `text-[11px] ${!isCurrentCompatible ? 'text-warning-600 font-medium' : ''}` 

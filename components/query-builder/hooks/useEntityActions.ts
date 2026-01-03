@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { useDisclosure } from "@nextui-org/react";
+import { useDisclosure } from "@nextui-org/use-disclosure";
 import { 
     ODataVersion, ParsedSchema, EntityType, 
     generateSAPUI5Code, generateCSharpDeleteCode, generateJavaDeleteCode,

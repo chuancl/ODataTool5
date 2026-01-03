@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Selection } from "@nextui-org/react";
+import React, { useState, useEffect, useMemo, Key } from 'react';
 import { ODataVersion, ParsedSchema } from '@/utils/odata-helper';
 
 import { ParamsForm, SortItem } from './query-builder/ParamsForm';
@@ -10,6 +9,9 @@ import { CodeModal } from './query-builder/CodeModal';
 // Hooks
 import { useODataQuery } from './query-builder/hooks/useODataQuery';
 import { useEntityActions } from './query-builder/hooks/useEntityActions';
+
+// Local type definition for NextUI Selection
+type Selection = "all" | Set<Key>;
 
 interface Props {
   url: string;

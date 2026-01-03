@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { Chip, Tabs, Tab } from "@nextui-org/react";
+import { Chip } from "@nextui-org/chip";
+import { Tabs, Tab } from "@nextui-org/tabs";
 import { Layers, LayoutList, Braces } from 'lucide-react';
 import { isExpandableData } from './utils';
 import { RecursiveDataTable } from './RecursiveDataTable';
