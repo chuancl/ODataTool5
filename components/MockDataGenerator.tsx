@@ -1,20 +1,22 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Button, Input, Card, CardBody, Select, SelectItem, Checkbox, Tabs, Tab, ScrollShadow, Tooltip, Accordion, AccordionItem } from "@nextui-org/react";
+import { Button, Input, Card, CardBody, Select, SelectItem, Tabs, Tab, ScrollShadow } from "@nextui-org/react";
 import { faker } from '@faker-js/faker';
-import { ODataVersion, ParsedSchema, EntityType } from '@/utils/odata-helper';
-import { useReactTable, getCoreRowModel, flexRender, createColumnHelper, RowSelectionState } from '@tanstack/react-table';
-import { Sparkles, Code2, Plus, Table2, Braces, Settings2, RefreshCw, Wand2, CheckSquare } from 'lucide-react';
+import { ODataVersion, ParsedSchema } from '@/utils/odata-helper';
+import { Sparkles, Table2, Braces, Settings2, RefreshCw, Wand2, Download, Copy } from 'lucide-react';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { vscodeDark } from '@uiw/codemirror-theme-vscode';
+import { githubLight } from '@uiw/codemirror-theme-github';
 import { useEntityActions } from './query-builder/hooks/useEntityActions';
 import { CodeModal } from './query-builder/CodeModal';
+import { RecursiveDataTable } from './query-builder/table/RecursiveDataTable'; // 复用强大的表格组件
 
 interface Props {
   url: string;
   version: ODataVersion;
   schema: ParsedSchema | null;
+  isDark?: boolean; // 支持暗色模式
 }
 
 // 常见 Faker 策略映射
@@ -42,7 +44,7 @@ const FAKER_OPTIONS = [
     { label: 'Sentence', value: 'lorem.sentence' },
 ];
 
-const MockDataGenerator: React.FC<Props> = ({ url, version, schema }) => {
+const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = true }) => {
   const [count, setCount] = useState('5');
   const [entitySets, setEntitySets] = useState<string[]>([]);
   const [selectedEntity, setSelectedEntity] = useState<string>('');
@@ -52,7 +54,9 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema }) => {
   
   // 数据状态
   const [mockData, setMockData] = useState<any[]>([]);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  
+  // 编辑器主题
+  const editorTheme = isDark ? vscodeDark : githubLight;
 
   // 1. 初始化实体列表
   useEffect(() => {
@@ -116,7 +120,6 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema }) => {
       });
       setFieldConfigs(initialConfig);
       setMockData([]); // 清空旧数据
-      setRowSelection({});
   }, [currentSchema]);
 
   // 5. 生成数据核心逻辑
@@ -125,7 +128,7 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema }) => {
     const num = parseInt(count) || 5;
     
     const newData = Array.from({ length: num }).map((_, i) => {
-      const row: any = { id: i }; // local ID for table key
+      const row: any = { id: i, __selected: true }; // 默认选中，id 为临时 key
       currentSchema.properties.forEach(p => {
           const strategy = fieldConfigs[p.name];
           try {
@@ -152,10 +155,6 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema }) => {
       return row;
     });
     setMockData(newData);
-    // 默认全选
-    const selection: RowSelectionState = {};
-    newData.forEach((_, idx) => selection[idx] = true);
-    setRowSelection(selection);
   };
 
   // 6. Action Hook 集成
@@ -177,61 +176,20 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema }) => {
       () => {}
   );
 
-  const handleCreateSelected = () => {
-      const selectedIndices = Object.keys(rowSelection).map(Number);
-      const itemsToCreate = mockData.filter((_, idx) => rowSelection[idx]);
-      prepareCreate(itemsToCreate);
+  const handleCreateSelected = (selectedItems: any[]) => {
+      prepareCreate(selectedItems);
   };
 
-  // --- Table Configuration ---
-  const columnHelper = createColumnHelper<any>();
-  const columns = useMemo(() => {
-      if (mockData.length === 0 && !currentSchema) return [];
-      
-      // Selection Column
-      const selectCol = columnHelper.display({
-          id: 'select',
-          header: ({ table }) => (
-            <Checkbox
-                size="sm"
-                isIndeterminate={table.getIsSomeRowsSelected()}
-                isSelected={table.getIsAllRowsSelected()}
-                onValueChange={(val) => table.toggleAllRowsSelected(!!val)}
-                aria-label="Select all"
-                classNames={{ wrapper: "m-0" }}
-            />
-          ),
-          cell: ({ row }) => (
-            <Checkbox
-                size="sm"
-                isSelected={row.getIsSelected()}
-                onValueChange={(val) => row.toggleSelected(!!val)}
-                aria-label="Select row"
-                classNames={{ wrapper: "m-0" }}
-            />
-          ),
-          size: 40,
-      });
-
-      // Data Columns
-      let dataCols: any[] = [];
-      if (currentSchema) {
-          dataCols = currentSchema.properties.map(p => columnHelper.accessor(p.name, {
-              header: p.name,
-              cell: info => <span className="text-xs font-mono truncate block max-w-[150px]" title={String(info.getValue())}>{String(info.getValue())}</span>
-          }));
-      }
-
-      return [selectCol, ...dataCols];
-  }, [mockData, currentSchema]);
-
-  const table = useReactTable({
-    data: mockData,
-    columns,
-    state: { rowSelection },
-    onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-  });
+  const downloadJson = () => {
+      const blob = new Blob([JSON.stringify(mockData, null, 2)], { type: 'application/json' });
+      const u = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = u; link.download = `${selectedEntity}_Mock.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(u);
+  };
 
   return (
     <div className="flex flex-col gap-4 h-full relative">
@@ -302,7 +260,6 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema }) => {
                                             </SelectItem>
                                         ))}
                                     </Select>
-                                    {/* Advanced manual input trigger could go here */}
                                 </div>
                             </div>
                         ))}
@@ -325,35 +282,23 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema }) => {
                 classNames={{
                     tabList: "px-4 border-b border-divider bg-default-50",
                     cursor: "w-full bg-secondary",
+                    panel: "flex-1 p-0 overflow-hidden flex flex-col h-full"
                 }}
               >
+                  {/* Tab 1: Table View */}
                   <Tab key="table" title={<div className="flex items-center gap-2"><Table2 size={14}/> Table View</div>}>
-                      <div className="flex-1 overflow-auto h-[calc(100vh-280px)] scrollbar-thin p-0">
+                      <div className="h-full flex flex-col">
                          {mockData.length > 0 ? (
-                            <table className="w-full text-left border-collapse">
-                                <thead className="sticky top-0 z-20 bg-default-100 shadow-sm">
-                                    {table.getHeaderGroups().map(hg => (
-                                        <tr key={hg.id}>
-                                            {hg.headers.map(h => (
-                                                <th key={h.id} className="p-2 text-xs font-bold text-default-600 border-b border-divider border-r border-divider/50 last:border-r-0">
-                                                    {flexRender(h.column.columnDef.header, h.getContext())}
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    ))}
-                                </thead>
-                                <tbody>
-                                    {table.getRowModel().rows.map((row, idx) => (
-                                        <tr key={row.id} className={`border-b border-divider/40 hover:bg-default-50 transition-colors ${row.getIsSelected() ? 'bg-primary/5' : ''}`}>
-                                            {row.getVisibleCells().map(cell => (
-                                                <td key={cell.id} className="p-2 border-r border-divider/20 last:border-r-0">
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            <RecursiveDataTable 
+                                data={mockData}
+                                isDark={isDark || false}
+                                isRoot={true}
+                                onCreate={handleCreateSelected} // 传入新增逻辑
+                                enableEdit={false} // 禁用编辑
+                                enableDelete={false} // 禁用删除 (但保留 Export)
+                                entityName={selectedEntity}
+                                schema={schema}
+                            />
                          ) : (
                              <div className="flex flex-col items-center justify-center h-full text-default-300 gap-2">
                                 <Wand2 size={48} className="opacity-20" />
@@ -362,41 +307,40 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema }) => {
                          )}
                       </div>
                   </Tab>
+                  
+                  {/* Tab 2: JSON Preview (Matches ResultTabs style) */}
                   <Tab key="json" title={<div className="flex items-center gap-2"><Braces size={14}/> JSON Preview</div>}>
-                      <div className="h-[calc(100vh-280px)] overflow-hidden text-sm">
-                          <CodeMirror
-                            value={JSON.stringify(mockData, null, 2)}
-                            height="100%"
-                            extensions={[json()]}
-                            theme={vscodeDark}
-                            readOnly={true}
-                            editable={false}
-                          />
+                      <div className="h-full flex flex-col">
+                          <div className="p-2 border-b border-divider flex justify-between items-center shrink-0 bg-content2">
+                              <span className="text-xs font-bold px-2 text-warning-500">JSON 响应结果</span>
+                              <div className="flex gap-1">
+                                  <Button isIconOnly size="sm" variant="light" onPress={downloadJson} title="导出 JSON">
+                                      <Download size={14} />
+                                  </Button>
+                                  <Button isIconOnly size="sm" variant="light" onPress={() => navigator.clipboard.writeText(JSON.stringify(mockData, null, 2))} title="复制 JSON">
+                                      <Copy size={14} />
+                                  </Button>
+                              </div>
+                          </div>
+                          <div className="flex-1 overflow-hidden relative text-sm">
+                              <CodeMirror
+                                value={mockData.length > 0 ? JSON.stringify(mockData, null, 2) : '// No data generated'}
+                                height="100%"
+                                className="h-full [&_.cm-scroller]:overflow-scroll"
+                                extensions={[json()]}
+                                theme={editorTheme}
+                                readOnly={true}
+                                editable={false}
+                                basicSetup={{
+                                    lineNumbers: true,
+                                    foldGutter: true,
+                                    highlightActiveLine: false
+                                }}
+                              />
+                          </div>
                       </div>
                   </Tab>
               </Tabs>
-
-              {/* 底部浮动操作栏 */}
-              {mockData.length > 0 && (
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-foreground text-background px-6 py-2 rounded-full shadow-xl flex items-center gap-4 z-30 animate-appearance-in">
-                      <div className="flex items-center gap-2 font-medium text-sm">
-                          <CheckSquare size={16} className="text-primary-500"/>
-                          <span>{Object.keys(rowSelection).length} Selected</span>
-                      </div>
-                      <div className="h-4 w-px bg-background/20"></div>
-                      <Button 
-                        size="sm" 
-                        color="primary" 
-                        variant="shadow" 
-                        className="font-bold text-white"
-                        onPress={handleCreateSelected}
-                        isDisabled={Object.keys(rowSelection).length === 0}
-                        startContent={<Plus size={16}/>}
-                      >
-                          Create Selected
-                      </Button>
-                  </div>
-              )}
           </div>
       </div>
 

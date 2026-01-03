@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { 
     ChevronUp, ChevronDown, GripVertical
@@ -28,11 +29,14 @@ interface RecursiveDataTableProps {
     isRoot?: boolean; 
     onDelete?: (selectedRows: any[]) => void; 
     onUpdate?: (updates: { item: any, changes: any }[]) => void;
+    onCreate?: (selectedRows: any[]) => void; // 新增：Create Callback
     onExport?: () => void;
     loading?: boolean;
     parentSelected?: boolean; 
     entityName?: string;
     schema?: ParsedSchema | null;
+    enableEdit?: boolean; // 新增：控制是否允许编辑
+    enableDelete?: boolean; // 新增：控制是否允许删除
 }
 
 export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({ 
@@ -41,11 +45,14 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
     isRoot = false, 
     onDelete, 
     onUpdate,
+    onCreate,
     onExport, 
     loading = false,
     parentSelected = false,
     entityName = 'Main',
-    schema
+    schema,
+    enableEdit = true,
+    enableDelete = true
 }) => {
     const tableContainerRef = useRef<HTMLDivElement>(null);
     const [containerWidth, setContainerWidth] = useState(() => {
@@ -202,10 +209,8 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
         }));
         
         // 自动选中正在修改的行 (Auto-select row on edit)
-        // Check if already selected (handle both keys)
         if (!rowSelection[rowIndex] && !rowSelection[String(rowIndex)]) {
             setRowSelection(prev => ({ ...prev, [rowIndex]: true }));
-            // 同时也更新数据源标记，以便导出等功能感知
             updateRecursiveSelection(data[rowIndex], true);
         }
     };
@@ -279,6 +284,13 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
         }
     };
 
+    const handleCreateClick = () => {
+        const selectedRows = data.filter(r => r['__selected'] === true);
+        if (onCreate) {
+            onCreate(selectedRows);
+        }
+    };
+
     return (
         <div className="h-full flex flex-col bg-content1 overflow-hidden">
             <TableHeader 
@@ -289,6 +301,9 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
                 onConfirmUpdate={handleConfirmUpdate}
                 onDelete={handleDeleteClick}
                 onExport={handleExport}
+                onCreate={onCreate ? handleCreateClick : undefined}
+                enableEdit={enableEdit}
+                enableDelete={enableDelete}
             />
 
             <div className="overflow-auto flex-1 w-full bg-content1 scrollbar-thin" ref={tableContainerRef}>

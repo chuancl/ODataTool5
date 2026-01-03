@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { NextUIProvider, Tabs, Tab, Input, Button, Chip } from "@nextui-org/react";
@@ -165,7 +166,7 @@ const DashboardContent: React.FC = () => {
                 </Tab>
                 <Tab key="mock" title={<div className="flex items-center gap-2"><span>Mock Data</span></div>}>
                   <div className="h-full w-full p-4 overflow-y-auto">
-                    <MockDataGenerator url={url} version={odataVersion} schema={schema} />
+                    <MockDataGenerator url={url} version={odataVersion} schema={schema} isDark={isDark} />
                   </div>
                 </Tab>
               </Tabs>

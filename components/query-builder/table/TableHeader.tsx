@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Button, Chip } from "@nextui-org/react";
-import { Trash, Save, Pencil, Check, X } from 'lucide-react';
+import { Trash, Save, Pencil, Check, X, Plus } from 'lucide-react';
 
 interface TableHeaderProps {
     isRoot: boolean;
@@ -10,6 +11,10 @@ interface TableHeaderProps {
     onConfirmUpdate: () => void;
     onDelete: () => void;
     onExport: () => void;
+    // New Props for customization
+    onCreate?: () => void;
+    enableEdit?: boolean;
+    enableDelete?: boolean;
 }
 
 export const TableHeader: React.FC<TableHeaderProps> = ({
@@ -19,7 +24,10 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
     onCancelEdit,
     onConfirmUpdate,
     onDelete,
-    onExport
+    onExport,
+    onCreate,
+    enableEdit = true,
+    enableDelete = true
 }) => {
     // 如果不是根表，不显示任何操作按钮和表头条
     // Sub-tables should not show modify/delete/export buttons.
@@ -32,18 +40,25 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
                 {isEditing && (
                     <Chip size="sm" color="warning" variant="flat" className="animate-pulse">编辑模式 (Editing)</Chip>
                 )}
+                
+                {/* Custom Create Button (Injected) */}
+                {onCreate && !isEditing && (
+                    <Button size="sm" color="primary" variant="solid" onPress={onCreate} startContent={<Plus size={14} />}>
+                        新增选中 (Create Selected)
+                    </Button>
+                )}
              </div>
              
              <div className="flex gap-2">
-                {/* 1. Modify Button: Always show when not editing */}
-                {!isEditing && (
+                {/* 1. Modify Button: Show only if enabled and not editing */}
+                {enableEdit && !isEditing && (
                     <Button size="sm" variant="flat" onPress={onStartEdit} startContent={<Pencil size={14} />}>
                         修改 (Modify)
                     </Button>
                 )}
 
                 {/* 2. Update/Cancel Buttons: Show only when editing */}
-                {isEditing && (
+                {enableEdit && isEditing && (
                     <>
                         <Button size="sm" color="success" variant="solid" className="text-white" onPress={onConfirmUpdate} startContent={<Check size={14} />}>
                             更新 (Update)
@@ -54,10 +69,12 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
                     </>
                 )}
                 
-                {/* 3. Delete Button: Always show */}
-                <Button size="sm" color="danger" variant="light" onPress={onDelete} startContent={<Trash size={14} />}>
-                    删除 (Delete)
-                </Button>
+                {/* 3. Delete Button: Show only if enabled */}
+                {enableDelete && (
+                    <Button size="sm" color="danger" variant="light" onPress={onDelete} startContent={<Trash size={14} />}>
+                        删除 (Delete)
+                    </Button>
+                )}
 
                 {/* 4. Export Button: Always show */}
                 <Button size="sm" color="primary" variant="light" onPress={onExport} startContent={<Save size={14} />}>
