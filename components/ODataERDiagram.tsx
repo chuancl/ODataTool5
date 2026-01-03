@@ -208,8 +208,8 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading }) => {
           layoutOptions: {
             'elk.algorithm': 'layered',
             'elk.direction': 'RIGHT',
-            'elk.spacing.nodeNode': '100', 
-            'elk.layered.spacing.nodeNodeBetweenLayers': '250',
+            'elk.spacing.nodeNode': '200',  // Increased spacing
+            'elk.layered.spacing.nodeNodeBetweenLayers': '400', // Increased spacing
             'elk.edgeRouting': 'SPLINES', 
             'elk.layered.nodePlacement.strategy': 'BRANDES_KOEPF',
           },
@@ -243,8 +243,8 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading }) => {
             markerStart: { type: MarkerType.ArrowClosed, color: e.color },
             markerEnd: { type: MarkerType.ArrowClosed, color: e.color },
             animated: false,
-            // Increase strokeWidth from 1.5 to 4.5 (3x)
-            style: { stroke: e.color, strokeWidth: 4.5, opacity: 0.8 },
+            // Increase strokeWidth to 6
+            style: { stroke: e.color, strokeWidth: 6, opacity: 0.8 },
             label: e.label,
             labelStyle: { fill: e.color, fontWeight: 700, fontSize: 10 },
             labelBgStyle: { fill: '#ffffff', fillOpacity: 0.7, rx: 4, ry: 4 },
@@ -300,8 +300,8 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading }) => {
           setEdges((eds) => eds.map(e => ({
               ...e, 
               animated: false, 
-              // Reset strokeWidth to 4.5
-              style: { stroke: e.data?.originalColor, strokeWidth: 4.5, opacity: 0.8 }, 
+              // Reset strokeWidth to 6
+              style: { stroke: e.data?.originalColor, strokeWidth: 6, opacity: 0.8 }, 
               markerStart: { type: MarkerType.ArrowClosed, color: e.data?.originalColor },
               markerEnd: { type: MarkerType.ArrowClosed, color: e.data?.originalColor },
               labelStyle: { ...e.labelStyle, fill: e.data?.originalColor, opacity: 1 },
@@ -334,8 +334,8 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading }) => {
               style: { 
                   ...e.style, 
                   stroke: color,
-                  // Highlighting width: increased to 6
-                  strokeWidth: isVisible ? 6 : 1,
+                  // Highlighting width: increased to 8 for visibility
+                  strokeWidth: isVisible ? 8 : 1,
                   opacity: isVisible ? 1 : 0.05, 
                   zIndex: isVisible ? 10 : 0
               },
