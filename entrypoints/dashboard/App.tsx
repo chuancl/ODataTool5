@@ -93,15 +93,15 @@ const DashboardContent: React.FC = () => {
   const handleUrlChange = (val: string) => setUrl(val);
 
   return (
-      <div className="text-foreground bg-slate-50 dark:bg-background h-screen w-screen flex flex-col overflow-hidden font-sans antialiased">
+      <div className="text-foreground bg-background h-screen w-screen flex flex-col overflow-hidden font-sans antialiased">
         
         {/* 顶部导航栏 */}
-        <nav className="h-16 border-b border-slate-200 dark:border-divider px-6 flex items-center justify-between bg-white dark:bg-content1 shrink-0 z-50 shadow-sm gap-4">
+        <nav className="h-16 border-b border-divider px-6 flex items-center justify-between bg-content1 shrink-0 z-50 shadow-sm gap-4">
           <div className="flex items-center gap-4 shrink-0">
-            <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-600 bg-clip-text text-transparent whitespace-nowrap drop-shadow-sm">
+            <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent whitespace-nowrap">
               OData Master
             </span>
-            <Chip color={odataVersion === 'Unknown' ? 'default' : 'success'} variant="flat" size="sm" className="font-bold">
+            <Chip color={odataVersion === 'Unknown' ? 'default' : 'success'} variant="flat" size="sm">
               {odataVersion}
             </Chip>
           </div>
@@ -118,7 +118,7 @@ const DashboardContent: React.FC = () => {
               startContent={<Search className="text-default-400" size={16} />}
               className="flex-1"
               classNames={{
-                inputWrapper: "bg-slate-50 dark:bg-content2 hover:bg-slate-100 dark:hover:bg-content3 transition-colors border-slate-300 dark:border-default-200 group-data-[focus=true]:border-primary"
+                inputWrapper: "bg-content2 hover:bg-content3 transition-colors group-data-[focus=true]:bg-content2"
               }}
             />
             <Button 
@@ -126,7 +126,7 @@ const DashboardContent: React.FC = () => {
               color="primary" 
               isLoading={isValidating} 
               onPress={() => validateAndLoad(url)}
-              className="font-medium shrink-0 shadow-md shadow-primary/20"
+              className="font-medium shrink-0"
               startContent={!isValidating && <RotateCw size={16} />}
             >
               Parse
@@ -139,19 +139,19 @@ const DashboardContent: React.FC = () => {
         </nav>
 
         {/* 主内容区域 */}
-        <main className="flex-1 w-full h-full relative overflow-hidden bg-slate-100 dark:bg-content2/50 p-2 md:p-4">
+        <main className="flex-1 w-full h-full relative overflow-hidden bg-content2/50 p-2 md:p-4">
           {!schema && !isValidating ? (
             <div className="flex flex-col items-center justify-center h-full text-default-400 gap-4">
-              <div className="w-20 h-20 bg-white dark:bg-content3 rounded-full flex items-center justify-center mb-2 shadow-sm border border-slate-200 dark:border-none">
-                <Search size={32} className="opacity-50 text-slate-400 dark:text-default-400" />
+              <div className="w-20 h-20 bg-content3 rounded-full flex items-center justify-center mb-2 shadow-inner">
+                <Search size={32} className="opacity-50" />
               </div>
-              <h2 className="text-xl font-semibold text-slate-600 dark:text-default-600">No OData Service Loaded</h2>
+              <h2 className="text-xl font-semibold text-default-600">No OData Service Loaded</h2>
               <p className="max-w-md text-center text-sm opacity-70">
                 Enter a valid OData Service URL (V2, V3, or V4) in the address bar above and click "Parse" to start visualizing and analyzing.
               </p>
             </div>
           ) : (
-            <div className="h-full w-full flex flex-col bg-white dark:bg-content1 rounded-xl shadow-md border border-slate-200 dark:border-divider overflow-hidden">
+            <div className="h-full w-full flex flex-col bg-content1 rounded-xl shadow-sm border border-divider overflow-hidden">
                {/* 
                   Keep-Alive Strategy:
                   1. Tabs use onSelectionChange but render NO content directly (empty Tabs).
@@ -164,10 +164,10 @@ const DashboardContent: React.FC = () => {
                 selectedKey={activeTab}
                 onSelectionChange={(k) => setActiveTab(k as string)}
                 classNames={{
-                  base: "w-full border-b border-slate-200 dark:border-divider shrink-0 bg-white dark:bg-content1",
+                  base: "w-full border-b border-divider shrink-0",
                   tabList: "p-0 gap-6 px-4 relative", 
-                  cursor: "w-full bg-primary h-[3px]",
-                  tab: "max-w-fit px-2 h-12 data-[selected=true]:font-bold text-slate-600 dark:text-default-500 data-[selected=true]:text-primary",
+                  cursor: "w-full bg-primary",
+                  tab: "max-w-fit px-2 h-12 data-[selected=true]:font-bold",
                   panel: "hidden" // Hide default panel behavior completely
                 }}
               >
@@ -177,7 +177,7 @@ const DashboardContent: React.FC = () => {
               </Tabs>
 
               {/* Content Container */}
-              <div className="flex-1 w-full h-full p-0 overflow-hidden relative bg-slate-50 dark:bg-content1">
+              <div className="flex-1 w-full h-full p-0 overflow-hidden relative bg-content1">
                   {/* ER Diagram View */}
                   <div className="w-full h-full absolute inset-0" style={{ display: activeTab === 'er' ? 'block' : 'none', visibility: activeTab === 'er' ? 'visible' : 'hidden' }}>
                      <ODataERDiagram url={url} schema={schema} isLoading={isValidating} xmlContent={rawMetadataXml} isDark={isDark} />

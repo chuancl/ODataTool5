@@ -210,7 +210,7 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
   return (
     <div className="flex flex-col gap-4 h-full relative">
       {/* 顶部控制栏 */}
-      <Card className="border-none shadow-md dark:shadow-sm bg-white dark:bg-content1 shrink-0 border border-slate-300 dark:border-none">
+      <Card className="border-none shadow-sm bg-content1 shrink-0">
         <CardBody className="p-3">
            <div className="flex flex-col md:flex-row gap-4 items-end justify-between">
               <div className="flex items-center gap-4 flex-1 w-full">
@@ -221,9 +221,6 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
                     className="max-w-[240px]"
                     selectedKeys={selectedEntity ? [selectedEntity] : []}
                     onChange={(e) => setSelectedEntity(e.target.value)}
-                    classNames={{
-                        trigger: "border-slate-300 dark:border-default-200"
-                    }}
                 >
                     {entitySets.map(es => <SelectItem key={es} value={es}>{es}</SelectItem>)}
                 </Select>
@@ -235,11 +232,8 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
                     className="max-w-[100px]" 
                     variant="bordered"
                     size="sm"
-                    classNames={{
-                        inputWrapper: "border-slate-300 dark:border-default-200"
-                    }}
                 />
-                <Button color="primary" onPress={generateData} startContent={<Sparkles size={16}/>} className="font-semibold shadow-md shadow-primary/20">
+                <Button color="primary" onPress={generateData} startContent={<Sparkles size={16}/>} className="font-semibold">
                   Generate Data
                 </Button>
               </div>
@@ -249,8 +243,8 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
 
       <div className="flex gap-4 flex-1 min-h-0">
           {/* 左侧：配置面板 */}
-          <div className="w-[320px] bg-white dark:bg-content1 rounded-xl border border-slate-300 dark:border-divider flex flex-col shrink-0 shadow-md dark:shadow-sm">
-             <div className="p-3 border-b border-slate-200 dark:border-divider font-bold text-sm flex items-center gap-2 text-slate-700 dark:text-default-600 bg-slate-50 dark:bg-transparent rounded-t-xl">
+          <div className="w-[320px] bg-content1 rounded-xl border border-divider flex flex-col shrink-0">
+             <div className="p-3 border-b border-divider font-bold text-sm flex items-center gap-2 text-default-600">
                  <Settings2 size={16} /> Field Configuration
              </div>
              
@@ -265,14 +259,14 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
                             const isCompatible = isStrategyCompatible(conf.strategy, fp.property.type);
                             
                             return (
-                                <div key={fp.path} className="flex flex-col gap-1 border-b border-slate-100 dark:border-divider/50 pb-3 last:border-0">
+                                <div key={fp.path} className="flex flex-col gap-1 border-b border-divider/50 pb-3 last:border-0">
                                     <div className="flex justify-between items-baseline mb-1">
-                                        <label className="text-[11px] font-bold text-slate-700 dark:text-default-700 truncate max-w-[200px]" title={fp.path}>
+                                        <label className="text-[11px] font-bold text-default-700 truncate max-w-[200px]" title={fp.path}>
                                             {fp.path}
                                             {fp.property.nullable === false && <span className="text-danger ml-1">*</span>}
                                         </label>
                                         <div className="flex items-center gap-1">
-                                            <span className="text-[9px] text-slate-400 dark:text-default-400 font-mono bg-slate-100 dark:bg-default-100 px-1 rounded">{fp.property.type.split('.').pop()}</span>
+                                            <span className="text-[9px] text-default-400 font-mono bg-default-100 px-1 rounded">{fp.property.type.split('.').pop()}</span>
                                             {!isCompatible && <AlertTriangle size={10} className="text-warning" />}
                                         </div>
                                     </div>
@@ -287,28 +281,28 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
 
                                     {/* Auto-Increment Settings - Always visible for 'custom.increment' */}
                                     {conf.strategy === 'custom.increment' && (
-                                        <div className="grid grid-cols-2 gap-2 mt-1 bg-slate-50 dark:bg-default-50 p-2 rounded border border-slate-200 dark:border-divider">
+                                        <div className="grid grid-cols-2 gap-2 mt-1 bg-default-50 p-2 rounded border border-divider">
                                             <Input 
                                                 label="Start" size="sm" type="number" variant="bordered"
-                                                classNames={{ input: "text-[10px]", label: "text-[9px]", inputWrapper: "border-slate-300 dark:border-default-200" }}
+                                                classNames={{ input: "text-[10px]", label: "text-[9px]" }}
                                                 value={String(conf.incrementConfig?.start)}
                                                 onValueChange={(v) => updateIncrementConfig(fp.path, 'start', Number(v))}
                                             />
                                             <Input 
                                                 label="Step" size="sm" type="number" variant="bordered"
-                                                classNames={{ input: "text-[10px]", label: "text-[9px]", inputWrapper: "border-slate-300 dark:border-default-200" }}
+                                                classNames={{ input: "text-[10px]", label: "text-[9px]" }}
                                                 value={String(conf.incrementConfig?.step)}
                                                 onValueChange={(v) => updateIncrementConfig(fp.path, 'step', Number(v))}
                                             />
                                             <Input 
                                                 label="Prefix" size="sm" variant="bordered"
-                                                classNames={{ input: "text-[10px]", label: "text-[9px]", inputWrapper: "border-slate-300 dark:border-default-200" }}
+                                                classNames={{ input: "text-[10px]", label: "text-[9px]" }}
                                                 value={conf.incrementConfig?.prefix}
                                                 onValueChange={(v) => updateIncrementConfig(fp.path, 'prefix', v)}
                                             />
                                             <Input 
                                                 label="Suffix" size="sm" variant="bordered"
-                                                classNames={{ input: "text-[10px]", label: "text-[9px]", inputWrapper: "border-slate-300 dark:border-default-200" }}
+                                                classNames={{ input: "text-[10px]", label: "text-[9px]" }}
                                                 value={conf.incrementConfig?.suffix}
                                                 onValueChange={(v) => updateIncrementConfig(fp.path, 'suffix', v)}
                                             />
@@ -321,7 +315,7 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
                  )}
              </ScrollShadow>
              
-             <div className="p-2 border-t border-slate-200 dark:border-divider">
+             <div className="p-2 border-t border-divider">
                  <Button size="sm" variant="light" fullWidth onPress={handleResetDefaults} startContent={<RefreshCw size={14}/>}>
                      Reset to Defaults
                  </Button>

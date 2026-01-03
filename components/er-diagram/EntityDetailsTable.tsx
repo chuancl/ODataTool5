@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { EntityProperty } from '@/utils/odata-helper';
 import { Key, Link2, ChevronDown, ChevronUp, GripVertical } from 'lucide-react';
@@ -34,8 +33,8 @@ export const EntityDetailsTable = ({
                 const isKey = keys.includes(info.getValue());
                 return (
                     <div className="flex items-center gap-2">
-                        {isKey ? <Key size={14} className="text-orange-600 dark:text-warning shrink-0" /> : <div className="w-3.5" />}
-                        <span className={`${isKey ? "font-bold text-foreground" : "text-slate-700 dark:text-default-700"} text-xs`}>
+                        {isKey ? <Key size={14} className="text-warning shrink-0" /> : <div className="w-3.5" />}
+                        <span className={`${isKey ? "font-bold text-foreground" : "text-default-700"} text-xs`}>
                             {info.getValue()}
                         </span>
                     </div>
@@ -60,9 +59,9 @@ export const EntityDetailsTable = ({
             size: 70,
             cell: info => {
                 const p = info.row.original;
-                if (p.maxLength) return <span className="font-mono text-xs text-slate-500 dark:text-default-500">{p.maxLength}</span>;
-                if (p.precision) return <span className="font-mono text-xs text-slate-500 dark:text-default-500">{p.precision}{p.scale !== undefined ? `,${p.scale}` : ''}</span>;
-                return <span className="text-slate-300 dark:text-default-300 text-xs">-</span>;
+                if (p.maxLength) return <span className="font-mono text-xs text-default-500">{p.maxLength}</span>;
+                if (p.precision) return <span className="font-mono text-xs text-default-500">{p.precision}{p.scale !== undefined ? `,${p.scale}` : ''}</span>;
+                return <span className="text-default-300 text-xs">-</span>;
             }
         }),
 
@@ -78,24 +77,24 @@ export const EntityDetailsTable = ({
                     <div className="flex items-center gap-1.5 flex-wrap">
                         {/* Nullable status */}
                         {!p.nullable && (
-                            <span title="Field is Required (Not Null)" className="px-1.5 py-0.5 rounded-[4px] bg-red-50 dark:bg-danger/10 text-red-700 dark:text-danger text-[10px] font-semibold border border-red-200 dark:border-danger/20">Required</span>
+                            <span title="Field is Required (Not Null)" className="px-1.5 py-0.5 rounded-[4px] bg-danger/10 text-danger text-[10px] font-semibold border border-danger/20">Required</span>
                         )}
                         
                         {/* Fixed Length */}
                         {p.fixedLength && (
-                             <span title="Fixed Length String/Binary" className="px-1.5 py-0.5 rounded-[4px] bg-slate-100 dark:bg-default-100 text-slate-600 dark:text-default-600 text-[10px] font-medium border border-slate-200 dark:border-default-200">Fixed Length</span>
+                             <span title="Fixed Length String/Binary" className="px-1.5 py-0.5 rounded-[4px] bg-default-100 text-default-600 text-[10px] font-medium border border-default-200">Fixed Length</span>
                         )}
 
                         {/* Unicode Status */}
                         {p.unicode === false ? (
-                             <span title="Non-Unicode (ANSI)" className="px-1.5 py-0.5 rounded-[4px] bg-orange-50 dark:bg-warning/10 text-orange-700 dark:text-warning-700 text-[10px] font-medium border border-orange-200 dark:border-warning/20">Non-Unicode</span>
+                             <span title="Non-Unicode (ANSI)" className="px-1.5 py-0.5 rounded-[4px] bg-warning/10 text-warning-700 text-[10px] font-medium border border-warning/20">Non-Unicode</span>
                         ) : (
-                             <span title="Unicode Enabled" className="px-1.5 py-0.5 rounded-[4px] bg-blue-50 dark:bg-primary/5 text-blue-700 dark:text-primary/70 text-[10px] font-medium border border-blue-100 dark:border-primary/10">Unicode</span>
+                             <span title="Unicode Enabled" className="px-1.5 py-0.5 rounded-[4px] bg-primary/5 text-primary/70 text-[10px] font-medium border border-primary/10">Unicode</span>
                         )}
 
                         {/* Concurrency */}
                         {p.concurrencyMode === 'Fixed' && (
-                            <span title="Optimistic Concurrency Control" className="px-1.5 py-0.5 rounded-[4px] bg-green-50 dark:bg-success/10 text-green-700 dark:text-success-700 text-[10px] font-medium border border-green-200 dark:border-success/20">Concurrency</span>
+                            <span title="Optimistic Concurrency Control" className="px-1.5 py-0.5 rounded-[4px] bg-success/10 text-success-700 text-[10px] font-medium border border-success/20">Concurrency</span>
                         )}
                     </div>
                 );
@@ -108,7 +107,7 @@ export const EntityDetailsTable = ({
             header: 'Default',
             enableSorting: true,
             size: 90,
-            cell: info => info.getValue() ? <span className="font-mono text-xs bg-slate-50 dark:bg-default-50 px-1 rounded border border-slate-200 dark:border-default-100 text-slate-600 dark:text-default-600 max-w-[80px] truncate block" title={info.getValue()}>{info.getValue()}</span> : <span className="text-slate-200 dark:text-default-200 text-xs">-</span>
+            cell: info => info.getValue() ? <span className="font-mono text-xs bg-default-50 px-1 rounded border border-default-100 text-default-600 max-w-[80px] truncate block" title={info.getValue()}>{info.getValue()}</span> : <span className="text-default-200 text-xs">-</span>
         }),
 
         // 6. Relation Column
@@ -121,10 +120,10 @@ export const EntityDetailsTable = ({
                 if (!fk) return null;
                 return (
                     <div className="flex items-center gap-1 text-xs w-full group">
-                        <Link2 size={12} className="text-purple-600 dark:text-secondary shrink-0" />
+                        <Link2 size={12} className="text-secondary shrink-0" />
                         <div className="flex items-center gap-0.5 overflow-hidden">
                             <span 
-                                className="font-bold text-purple-600 dark:text-secondary cursor-pointer hover:underline hover:text-purple-800 dark:hover:text-secondary-600 truncate" 
+                                className="font-bold text-secondary cursor-pointer hover:underline hover:text-secondary-600 truncate" 
                                 // STRATEGY: 
                                 // 1. Stop propagation on MouseDown. This prevents the Root 'onMouseDown' (which triggers Z-index update) 
                                 //    from firing immediately. This PROTECTS the link click from being killed by a re-render race condition.
@@ -139,8 +138,8 @@ export const EntityDetailsTable = ({
                             >
                                 {fk.targetEntity}
                             </span>
-                            <span className="text-slate-400 dark:text-default-400">.</span>
-                            <span className="font-mono text-slate-600 dark:text-default-600 truncate" title={`Target Field: ${fk.targetProperty}`}>{fk.targetProperty}</span>
+                            <span className="text-default-400">.</span>
+                            <span className="font-mono text-default-600 truncate" title={`Target Field: ${fk.targetProperty}`}>{fk.targetProperty}</span>
                         </div>
                     </div>
                 );
@@ -164,13 +163,13 @@ export const EntityDetailsTable = ({
     return (
         <div className="w-full h-full flex flex-col">
             <table className="w-full text-left border-collapse table-fixed">
-                <thead className="sticky top-0 z-20 bg-slate-100/90 dark:bg-default-50/90 backdrop-blur-md shadow-sm border-b border-slate-300 dark:border-divider">
+                <thead className="sticky top-0 z-20 bg-default-50/90 backdrop-blur-md shadow-sm border-b border-divider">
                     {table.getHeaderGroups().map(headerGroup => (
                         <tr key={headerGroup.id}>
                             {headerGroup.headers.map(header => (
                                 <th 
                                     key={header.id} 
-                                    className="relative p-2 py-3 text-xs font-bold text-slate-700 dark:text-default-600 uppercase tracking-wider select-none group border-r border-slate-200/50 dark:border-divider/10 hover:bg-slate-200 dark:hover:bg-default-100 transition-colors"
+                                    className="relative p-2 py-3 text-xs font-bold text-default-600 uppercase tracking-wider select-none group border-r border-divider/10 hover:bg-default-100 transition-colors"
                                     style={{ width: header.getSize() }}
                                     draggable={!header.isPlaceholder}
                                     onDragStart={(e) => {
@@ -196,7 +195,7 @@ export const EntityDetailsTable = ({
                                     <div className="flex items-center gap-1 w-full">
                                         <GripVertical 
                                             size={12} 
-                                            className="text-slate-400 dark:text-default-300 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity" 
+                                            className="text-default-300 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity" 
                                         />
                                         
                                         <div 
@@ -229,13 +228,13 @@ export const EntityDetailsTable = ({
                         <tr 
                             key={row.id} 
                             className={`
-                                border-b border-slate-200 dark:border-divider/40 last:border-0 transition-colors
-                                hover:bg-blue-50 dark:hover:bg-primary/5
-                                ${idx % 2 === 0 ? 'bg-transparent' : 'bg-slate-50/50 dark:bg-default-50/30'}
+                                border-b border-divider/40 last:border-0 transition-colors
+                                hover:bg-primary/5
+                                ${idx % 2 === 0 ? 'bg-transparent' : 'bg-default-50/30'}
                             `}
                         >
                             {row.getVisibleCells().map(cell => (
-                                <td key={cell.id} className="p-2 text-xs h-10 border-r border-slate-100 dark:border-divider/20 last:border-r-0 align-middle overflow-hidden text-ellipsis">
+                                <td key={cell.id} className="p-2 text-xs h-10 border-r border-divider/20 last:border-r-0 align-middle overflow-hidden text-ellipsis">
                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                 </td>
                             ))}
