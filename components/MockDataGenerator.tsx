@@ -98,7 +98,7 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
       if (name.includes('country')) return 'location.country';
 
       // 基于类型推断
-      if (type === 'Edm.Int32' || type === 'Edm.Int16' || type === 'Edm.Int64') return 'number.int';
+      if (['Edm.Int32', 'Edm.Int16', 'Edm.Int64', 'Edm.Byte', 'Edm.SByte'].includes(type)) return 'number.int';
       if (type === 'Edm.Decimal' || type === 'Edm.Double') return 'commerce.price';
       if (type === 'Edm.Boolean') return 'datatype.boolean';
       if (type === 'Edm.DateTime' || type === 'Edm.DateTimeOffset') return 'date.recent';
@@ -135,10 +135,16 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
                   if ((faker as any)[module] && (faker as any)[module][method]) {
                       let val = (faker as any)[module][method]();
                       
-                      // 类型转换
+                      // 类型转换与约束
                       if (p.type === 'Edm.Int32') val = parseInt(val);
+                      else if (p.type === 'Edm.Int16') val = parseInt(val) % 32767;
+                      else if (p.type === 'Edm.Byte') val = Math.abs(parseInt(val)) % 255;
+                      else if (p.type === 'Edm.SByte') val = parseInt(val) % 127;
                       else if (p.type === 'Edm.Boolean') val = !!val;
                       else if (p.type.includes('Date')) val = new Date(val).toISOString();
+                      else if (p.type === 'Edm.String' && p.maxLength && typeof val === 'string') {
+                          val = val.substring(0, p.maxLength);
+                      }
                       
                       row[p.name] = val;
                   } else {
