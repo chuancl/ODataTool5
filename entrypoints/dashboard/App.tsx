@@ -19,6 +19,9 @@ const DashboardContent: React.FC = () => {
   const [isValidating, setIsValidating] = useState(false);
   const [schema, setSchema] = useState<ParsedSchema | null>(null);
   
+  // 增加 Tab 状态控制
+  const [activeTab, setActiveTab] = useState<string>('er');
+  
   const toast = useToast(); // 使用 Toast Hook
 
   useEffect(() => {
@@ -142,34 +145,51 @@ const DashboardContent: React.FC = () => {
             </div>
           ) : (
             <div className="h-full w-full flex flex-col bg-content1 rounded-xl shadow-sm border border-divider overflow-hidden">
+               {/* 
+                  Keep-Alive Strategy:
+                  1. Tabs use onSelectionChange but render NO content directly (empty Tabs).
+                  2. Content divs are rendered below, controlled by style={{ display }}
+               */}
                <Tabs 
                 aria-label="Features" 
                 color="primary" 
                 variant="underlined"
+                selectedKey={activeTab}
+                onSelectionChange={(k) => setActiveTab(k as string)}
                 classNames={{
-                  base: "w-full border-b border-divider",
+                  base: "w-full border-b border-divider shrink-0",
                   tabList: "p-0 gap-6 px-4 relative", 
                   cursor: "w-full bg-primary",
                   tab: "max-w-fit px-2 h-12 data-[selected=true]:font-bold",
-                  panel: "flex-1 w-full h-full p-0 overflow-hidden bg-content1" 
+                  panel: "hidden" // Hide default panel behavior completely
                 }}
               >
-                <Tab key="er" title={<div className="flex items-center gap-2"><span>ER Diagram</span></div>}>
-                  <div className="h-full w-full relative overflow-hidden">
+                <Tab key="er" title={<div className="flex items-center gap-2"><span>ER Diagram</span></div>} />
+                <Tab key="query" title={<div className="flex items-center gap-2"><span>Query Builder</span></div>} />
+                <Tab key="mock" title={<div className="flex items-center gap-2"><span>Mock Data</span></div>} />
+              </Tabs>
+
+              {/* Content Container */}
+              <div className="flex-1 w-full h-full p-0 overflow-hidden relative bg-content1">
+                  {/* ER Diagram View */}
+                  <div className="w-full h-full absolute inset-0" style={{ display: activeTab === 'er' ? 'block' : 'none', visibility: activeTab === 'er' ? 'visible' : 'hidden' }}>
                      <ODataERDiagram url={url} schema={schema} isLoading={isValidating} />
                   </div>
-                </Tab>
-                <Tab key="query" title={<div className="flex items-center gap-2"><span>Query Builder</span></div>}>
-                  <div className="h-full w-full p-0">
-                    <QueryBuilder url={url} version={odataVersion} isDark={isDark} schema={schema} />
+
+                  {/* Query Builder View */}
+                  <div className="w-full h-full absolute inset-0" style={{ display: activeTab === 'query' ? 'block' : 'none', visibility: activeTab === 'query' ? 'visible' : 'hidden' }}>
+                    <div className="h-full w-full p-0">
+                        <QueryBuilder url={url} version={odataVersion} isDark={isDark} schema={schema} />
+                    </div>
                   </div>
-                </Tab>
-                <Tab key="mock" title={<div className="flex items-center gap-2"><span>Mock Data</span></div>}>
-                  <div className="h-full w-full p-4 overflow-y-auto">
-                    <MockDataGenerator url={url} version={odataVersion} schema={schema} isDark={isDark} />
+
+                  {/* Mock Data View */}
+                  <div className="w-full h-full absolute inset-0" style={{ display: activeTab === 'mock' ? 'block' : 'none', visibility: activeTab === 'mock' ? 'visible' : 'hidden' }}>
+                    <div className="h-full w-full p-4 overflow-y-auto">
+                        <MockDataGenerator url={url} version={odataVersion} schema={schema} isDark={isDark} />
+                    </div>
                   </div>
-                </Tab>
-              </Tabs>
+              </div>
             </div>
           )}
         </main>
