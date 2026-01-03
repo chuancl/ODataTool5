@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react";
-import { FileCode, Trash2, Copy, Globe, Terminal, Coffee, Check } from 'lucide-react';
+import { FileCode, Trash2, Copy, Globe, Terminal, Coffee, Check, Plus } from 'lucide-react';
 import CodeMirror from '@uiw/react-codemirror';
 import { json } from '@codemirror/lang-json';
 import { javascript } from '@codemirror/lang-javascript';
@@ -68,6 +69,7 @@ export const CodeModal: React.FC<CodeModalProps> = ({ isOpen, onOpenChange, code
                             <FileCode className="text-primary" />
                             {action === 'delete' ? '确认删除 (Confirm Delete)' : 
                              action === 'update' ? '确认更新 (Confirm Update)' : 
+                             action === 'create' ? '确认创建 (Confirm Create)' :
                              `代码预览 (${action})`}
                         </ModalHeader>
                         <ModalBody className="p-0 bg-[#1e1e1e] flex flex-col min-h-[400px]">
@@ -83,6 +85,13 @@ export const CodeModal: React.FC<CodeModalProps> = ({ isOpen, onOpenChange, code
                                     提示: 您即将执行 PATCH 操作更新数据。以下是生成的变更代码。
                                     <br/>
                                     Info: You are about to UPDATE data. Review the generated PATCH code below.
+                                </div>
+                            )}
+                            {action === 'create' && (
+                                <div className="p-4 pb-0 text-sm text-success-500 font-bold bg-background shrink-0">
+                                    提示: 您即将执行 POST 操作创建新数据。
+                                    <br/>
+                                    Info: You are about to CREATE new data. Review the payload below.
                                 </div>
                             )}
 
@@ -137,7 +146,7 @@ export const CodeModal: React.FC<CodeModalProps> = ({ isOpen, onOpenChange, code
                         </ModalBody>
                         <ModalFooter className="border-t border-divider bg-background">
                             <div className="flex-1">
-                                {(action === 'delete' || action === 'update') && (
+                                {(action === 'delete' || action === 'update' || action === 'create') && (
                                      <span className="text-xs text-default-400">点击 "Copy" 复制当前标签页代码。点击 "Execute" 在此工具中运行操作。</span>
                                 )}
                             </div>
@@ -147,13 +156,20 @@ export const CodeModal: React.FC<CodeModalProps> = ({ isOpen, onOpenChange, code
                                 复制 (Copy Code)
                             </Button>
 
-                            {(action === 'delete' || action === 'update') && (
+                            {(action === 'delete' || action === 'update' || action === 'create') && (
                                 <Button 
-                                    color={action === 'delete' ? "danger" : "primary"} 
+                                    color={action === 'delete' ? "danger" : action === 'create' ? "success" : "primary"} 
                                     onPress={() => { onExecute(); onClose(); }} 
-                                    startContent={action === 'delete' ? <Trash2 size={16}/> : <Check size={16}/>}
+                                    className={action === 'create' ? "text-white" : ""}
+                                    startContent={
+                                        action === 'delete' ? <Trash2 size={16}/> : 
+                                        action === 'create' ? <Plus size={16}/> :
+                                        <Check size={16}/>
+                                    }
                                 >
-                                    {action === 'delete' ? "确认执行删除 (Execute Delete)" : "确认执行更新 (Execute Update)"}
+                                    {action === 'delete' ? "确认执行删除 (Execute Delete)" : 
+                                     action === 'create' ? "确认执行创建 (Execute Create)" :
+                                     "确认执行更新 (Execute Update)"}
                                 </Button>
                             )}
                         </ModalFooter>
