@@ -21,6 +21,7 @@ const mk = (cat: string, mod: string, meth: string, lbl: string, types?: string[
 export const DEFAULT_STRATEGIES: MockStrategy[] = [
     { value: 'custom.null', label: 'Null (空值)', category: 'Custom (自定义)', type: 'custom.null' },
     { value: 'custom.empty', label: 'Empty String (空字符串)', category: 'Custom (自定义)', type: 'custom.empty', allowedTypes: ['Edm.String'] },
+    { value: 'custom.placeholder', label: 'Placeholder (占位符)', category: 'Custom (自定义)', type: 'custom.placeholder', allowedTypes: ['Edm.String'] },
     { value: 'custom.increment', label: 'Auto Increment (自增序列)', category: 'Custom (自定义)', type: 'custom.increment', allowedTypes: ['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.Byte', 'Edm.SByte', 'Edm.Decimal', 'Edm.Double', 'Edm.Single', 'Edm.String'] },
 ];
 

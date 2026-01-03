@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker';
 import { EntityType, EntityProperty, ParsedSchema } from '@/utils/odata-helper';
 import { DEFAULT_STRATEGIES, FAKER_DEFINITIONS } from './faker-definitions';
 
-export type MockStrategyType = 'faker' | 'custom.null' | 'custom.empty' | 'custom.undefined' | 'custom.increment' | 'custom.age';
+export type MockStrategyType = 'faker' | 'custom.null' | 'custom.empty' | 'custom.undefined' | 'custom.increment' | 'custom.age' | 'custom.placeholder';
 
 export interface MockStrategy {
     value: string;
@@ -125,6 +125,7 @@ export const generateValue = (strategyValue: string, prop: EntityProperty, index
 
     if (strategy.type === 'custom.null') return null;
     if (strategy.type === 'custom.empty') return "";
+    if (strategy.type === 'custom.placeholder') return "__PLACEHOLDER_VALUE__";
     
     // Age Logic: 18-90
     if (strategy.type === 'custom.age') {
