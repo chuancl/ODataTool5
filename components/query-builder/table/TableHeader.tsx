@@ -15,6 +15,7 @@ interface TableHeaderProps {
     onCreate?: () => void;
     enableEdit?: boolean;
     enableDelete?: boolean;
+    hideUpdateButton?: boolean;
 }
 
 export const TableHeader: React.FC<TableHeaderProps> = ({
@@ -27,7 +28,8 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
     onExport,
     onCreate,
     enableEdit = true,
-    enableDelete = true
+    enableDelete = true,
+    hideUpdateButton = false
 }) => {
     // 如果不是根表，不显示任何操作按钮和表头条
     // Sub-tables should not show modify/delete/export buttons.
@@ -40,16 +42,16 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
                 {isEditing && (
                     <Chip size="sm" color="warning" variant="flat" className="animate-pulse">编辑模式 (Editing)</Chip>
                 )}
-                
-                {/* Custom Create Button (Injected) */}
-                {onCreate && !isEditing && (
+             </div>
+             
+             <div className="flex gap-2">
+                 {/* Create Button (Moved to Right Group) */}
+                {onCreate && (
                     <Button size="sm" color="primary" variant="solid" onPress={onCreate} startContent={<Plus size={14} />}>
                         新增选中 (Create Selected)
                     </Button>
                 )}
-             </div>
-             
-             <div className="flex gap-2">
+
                 {/* 1. Modify Button: Show only if enabled and not editing */}
                 {enableEdit && !isEditing && (
                     <Button size="sm" variant="flat" onPress={onStartEdit} startContent={<Pencil size={14} />}>
@@ -60,9 +62,11 @@ export const TableHeader: React.FC<TableHeaderProps> = ({
                 {/* 2. Update/Cancel Buttons: Show only when editing */}
                 {enableEdit && isEditing && (
                     <>
-                        <Button size="sm" color="success" variant="solid" className="text-white" onPress={onConfirmUpdate} startContent={<Check size={14} />}>
-                            更新 (Update)
-                        </Button>
+                        {!hideUpdateButton && (
+                            <Button size="sm" color="success" variant="solid" className="text-white" onPress={onConfirmUpdate} startContent={<Check size={14} />}>
+                                更新 (Update)
+                            </Button>
+                        )}
                         <Button size="sm" color="default" variant="flat" onPress={onCancelEdit} startContent={<X size={14} />}>
                             取消 (Cancel)
                         </Button>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button, Chip, Tabs, Tab } from "@nextui-org/react";
 import { 
@@ -18,16 +19,22 @@ interface ResultTabsProps {
     loading: boolean;
     isDark: boolean;
     onDelete: (selectedRows: any[]) => void;
-    onUpdate?: (updates: { item: any, changes: any }[]) => void; // New Prop
+    onUpdate?: (updates: { item: any, changes: any }[]) => void;
     onExport: () => void;
     downloadFile: (content: string, filename: string, type: 'json' | 'xml') => void;
     entityName?: string; 
     schema: ParsedSchema | null;
+    // New Props
+    onCreate?: (selectedRows: any[]) => void;
+    enableEdit?: boolean;
+    enableDelete?: boolean;
+    hideUpdateButton?: boolean;
 }
 
 export const ResultTabs: React.FC<ResultTabsProps> = ({
     queryResult, rawJsonResult, rawXmlResult, loading, isDark,
-    onDelete, onUpdate, onExport, downloadFile, entityName, schema
+    onDelete, onUpdate, onExport, downloadFile, entityName, schema,
+    onCreate, enableEdit, enableDelete, hideUpdateButton
 }) => {
     const editorTheme = isDark ? vscodeDark : githubLight;
     
@@ -63,11 +70,15 @@ export const ResultTabs: React.FC<ResultTabsProps> = ({
                         isDark={isDark}
                         isRoot={true}
                         onDelete={onDelete}
-                        onUpdate={onUpdate} // Pass it down
+                        onUpdate={onUpdate}
                         onExport={onExport}
                         loading={loading}
                         entityName={entityName}
                         schema={schema} 
+                        onCreate={onCreate}
+                        enableEdit={enableEdit}
+                        enableDelete={enableDelete}
+                        hideUpdateButton={hideUpdateButton}
                     />
                 </Tab>
 

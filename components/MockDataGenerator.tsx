@@ -1,22 +1,18 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Button, Input, Card, CardBody, Select, SelectItem, Tabs, Tab, ScrollShadow } from "@nextui-org/react";
+import { Button, Input, Card, CardBody, Select, SelectItem, ScrollShadow } from "@nextui-org/react";
 import { faker } from '@faker-js/faker';
 import { ODataVersion, ParsedSchema } from '@/utils/odata-helper';
-import { Sparkles, Table2, Braces, Settings2, RefreshCw, Wand2, Download, Copy } from 'lucide-react';
-import CodeMirror from '@uiw/react-codemirror';
-import { json } from '@codemirror/lang-json';
-import { vscodeDark } from '@uiw/codemirror-theme-vscode';
-import { githubLight } from '@uiw/codemirror-theme-github';
+import { Sparkles, Settings2, RefreshCw, Wand2 } from 'lucide-react';
 import { useEntityActions } from './query-builder/hooks/useEntityActions';
 import { CodeModal } from './query-builder/CodeModal';
-import { RecursiveDataTable } from './query-builder/table/RecursiveDataTable'; // 复用强大的表格组件
+import { ResultTabs } from './query-builder/ResultTabs';
 
 interface Props {
   url: string;
   version: ODataVersion;
   schema: ParsedSchema | null;
-  isDark?: boolean; // 支持暗色模式
+  isDark?: boolean;
 }
 
 // 常见 Faker 策略映射
@@ -54,9 +50,6 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
   
   // 数据状态
   const [mockData, setMockData] = useState<any[]>([]);
-  
-  // 编辑器主题
-  const editorTheme = isDark ? vscodeDark : githubLight;
 
   // 1. 初始化实体列表
   useEffect(() => {
@@ -180,11 +173,11 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
       prepareCreate(selectedItems);
   };
 
-  const downloadJson = () => {
-      const blob = new Blob([JSON.stringify(mockData, null, 2)], { type: 'application/json' });
+  const downloadJson = (content: string, filename: string, type: 'json' | 'xml') => {
+      const blob = new Blob([content], { type: type === 'json' ? 'application/json' : 'application/xml' });
       const u = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = u; link.download = `${selectedEntity}_Mock.json`;
+      link.href = u; link.download = `${selectedEntity}_Mock.${type === 'json' ? 'json' : 'xml'}`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -273,75 +266,25 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
              </div>
           </div>
 
-          {/* 右侧：数据展示区 */}
-          <div className="flex-1 flex flex-col bg-content1 rounded-xl border border-divider overflow-hidden relative">
-              <Tabs 
-                aria-label="View Mode" 
-                variant="underlined"
-                color="secondary"
-                classNames={{
-                    tabList: "px-4 border-b border-divider bg-default-50",
-                    cursor: "w-full bg-secondary",
-                    panel: "flex-1 p-0 overflow-hidden flex flex-col h-full"
-                }}
-              >
-                  {/* Tab 1: Table View */}
-                  <Tab key="table" title={<div className="flex items-center gap-2"><Table2 size={14}/> Table View</div>}>
-                      <div className="h-full flex flex-col">
-                         {mockData.length > 0 ? (
-                            <RecursiveDataTable 
-                                data={mockData}
-                                isDark={isDark || false}
-                                isRoot={true}
-                                onCreate={handleCreateSelected} // 传入新增逻辑
-                                enableEdit={false} // 禁用编辑
-                                enableDelete={false} // 禁用删除 (但保留 Export)
-                                entityName={selectedEntity}
-                                schema={schema}
-                            />
-                         ) : (
-                             <div className="flex flex-col items-center justify-center h-full text-default-300 gap-2">
-                                <Wand2 size={48} className="opacity-20" />
-                                <p>Click "Generate Data" to start</p>
-                             </div>
-                         )}
-                      </div>
-                  </Tab>
-                  
-                  {/* Tab 2: JSON Preview (Matches ResultTabs style) */}
-                  <Tab key="json" title={<div className="flex items-center gap-2"><Braces size={14}/> JSON Preview</div>}>
-                      <div className="h-full flex flex-col">
-                          <div className="p-2 border-b border-divider flex justify-between items-center shrink-0 bg-content2">
-                              <span className="text-xs font-bold px-2 text-warning-500">JSON 响应结果</span>
-                              <div className="flex gap-1">
-                                  <Button isIconOnly size="sm" variant="light" onPress={downloadJson} title="导出 JSON">
-                                      <Download size={14} />
-                                  </Button>
-                                  <Button isIconOnly size="sm" variant="light" onPress={() => navigator.clipboard.writeText(JSON.stringify(mockData, null, 2))} title="复制 JSON">
-                                      <Copy size={14} />
-                                  </Button>
-                              </div>
-                          </div>
-                          <div className="flex-1 overflow-hidden relative text-sm">
-                              <CodeMirror
-                                value={mockData.length > 0 ? JSON.stringify(mockData, null, 2) : '// No data generated'}
-                                height="100%"
-                                className="h-full [&_.cm-scroller]:overflow-scroll"
-                                extensions={[json()]}
-                                theme={editorTheme}
-                                readOnly={true}
-                                editable={false}
-                                basicSetup={{
-                                    lineNumbers: true,
-                                    foldGutter: true,
-                                    highlightActiveLine: false
-                                }}
-                              />
-                          </div>
-                      </div>
-                  </Tab>
-              </Tabs>
-          </div>
+          {/* 右侧：数据展示区 (使用 ResultTabs 复用) */}
+          <ResultTabs 
+             queryResult={mockData}
+             rawJsonResult={JSON.stringify(mockData, null, 2)}
+             rawXmlResult="" // Mock data usually json only
+             loading={false}
+             isDark={isDark}
+             onDelete={() => {}} // No delete action
+             onUpdate={() => {}} // No update action (using Create)
+             onExport={() => {}} // Export handled by table
+             downloadFile={downloadJson}
+             entityName={selectedEntity}
+             schema={schema}
+             // Custom props
+             onCreate={handleCreateSelected}
+             enableEdit={true}
+             enableDelete={false}
+             hideUpdateButton={true}
+          />
       </div>
 
       {/* Code Execution Modal */}

@@ -37,6 +37,7 @@ interface RecursiveDataTableProps {
     schema?: ParsedSchema | null;
     enableEdit?: boolean; // 新增：控制是否允许编辑
     enableDelete?: boolean; // 新增：控制是否允许删除
+    hideUpdateButton?: boolean; // 新增：在编辑模式下隐藏更新按钮 (用于 Mock Data)
 }
 
 export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({ 
@@ -52,7 +53,8 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
     entityName = 'Main',
     schema,
     enableEdit = true,
-    enableDelete = true
+    enableDelete = true,
+    hideUpdateButton = false
 }) => {
     const tableContainerRef = useRef<HTMLDivElement>(null);
     const [containerWidth, setContainerWidth] = useState(() => {
@@ -284,10 +286,25 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
         }
     };
 
+    // 处理新增点击：合并修改草稿
     const handleCreateClick = () => {
-        const selectedRows = data.filter(r => r['__selected'] === true);
+        const selectedRowsWithEdits: any[] = [];
+        
+        data.forEach((row, idx) => {
+            // Check if selected using the mutation marker
+            if (row['__selected'] === true) {
+                const draft = editDraft[idx];
+                if (draft) {
+                    // Merge edits into original row for creation payload
+                    selectedRowsWithEdits.push({ ...row, ...draft });
+                } else {
+                    selectedRowsWithEdits.push(row);
+                }
+            }
+        });
+
         if (onCreate) {
-            onCreate(selectedRows);
+            onCreate(selectedRowsWithEdits);
         }
     };
 
@@ -304,6 +321,7 @@ export const RecursiveDataTable: React.FC<RecursiveDataTableProps> = ({
                 onCreate={onCreate ? handleCreateClick : undefined}
                 enableEdit={enableEdit}
                 enableDelete={enableDelete}
+                hideUpdateButton={hideUpdateButton}
             />
 
             <div className="overflow-auto flex-1 w-full bg-content1 scrollbar-thin" ref={tableContainerRef}>
