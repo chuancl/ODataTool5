@@ -32,9 +32,9 @@ interface FlatItem {
 export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange, odataType, label }) => {
     const selectedStrategy = useMemo(() => ALL_STRATEGIES.find(s => s.value === value), [value]);
 
-    // 默认展开 Custom 和 Person，以及当前选中值所属的分类
+    // 优化：默认仅展开 Custom 和当前选中项所属的分类。移除 'Person' 默认展开以减少列表长度，帮助准确定位。
     const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => {
-        const defaults = new Set(['Custom (自定义)', 'Person (人物)']);
+        const defaults = new Set(['Custom (自定义)']);
         if (selectedStrategy) {
             defaults.add(selectedStrategy.category);
         }
@@ -50,7 +50,7 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
                 return next;
             });
         }
-    }, [selectedStrategy]);
+    }, [selectedStrategy]); // 依赖 selectedStrategy 对象引用变化
 
     const grouped = useMemo(() => getGroupedStrategies(), []);
     
@@ -101,6 +101,11 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
 
     const isCurrentCompatible = selectedStrategy ? isStrategyCompatible(value, odataType) : true;
 
+    // Memoize selected keys specifically to ensure stability for NextUI
+    const selectedKeys = useMemo(() => {
+        return selectedStrategy ? new Set([selectedStrategy.value]) : new Set([]);
+    }, [selectedStrategy]);
+
     const toggleCategory = (catName: string) => {
         // 如果该分类包含当前选中项，则不允许折叠 (保持可见性)
         if (selectedStrategy?.category === catName) return;
@@ -118,7 +123,7 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
             aria-label={label || "Select Strategy"}
             size="sm" 
             variant="faded" 
-            selectedKeys={selectedStrategy ? [selectedStrategy.value] : []}
+            selectedKeys={selectedKeys}
             onSelectionChange={(keys) => {
                 const k = Array.from(keys)[0] as string;
                 if (k && !k.startsWith('CAT_')) onChange(k);
