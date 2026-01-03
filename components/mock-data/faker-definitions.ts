@@ -28,6 +28,14 @@ export const DEFAULT_STRATEGIES: MockStrategy[] = [
 export const FAKER_DEFINITIONS: MockStrategy[] = [
     // --- Person (人物) - Complete ---
     mk('Person (人物)', 'person', 'fullName', 'Full Name (全名)', STR),
+    // Manually added Age strategy
+    { 
+        value: 'custom.age', 
+        label: 'Age (年龄)', 
+        category: 'Person (人物)', 
+        type: 'custom.age', 
+        allowedTypes: [...NUM, ...STR] 
+    },
     mk('Person (人物)', 'person', 'firstName', 'First Name (名)', STR),
     mk('Person (人物)', 'person', 'lastName', 'Last Name (姓)', STR),
     mk('Person (人物)', 'person', 'middleName', 'Middle Name (中间名)', STR),

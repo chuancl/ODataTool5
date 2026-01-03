@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker';
 import { EntityType, EntityProperty, ParsedSchema } from '@/utils/odata-helper';
 import { DEFAULT_STRATEGIES, FAKER_DEFINITIONS } from './faker-definitions';
 
-export type MockStrategyType = 'faker' | 'custom.null' | 'custom.empty' | 'custom.undefined' | 'custom.increment';
+export type MockStrategyType = 'faker' | 'custom.null' | 'custom.empty' | 'custom.undefined' | 'custom.increment' | 'custom.age';
 
 export interface MockStrategy {
     value: string;
@@ -39,7 +39,12 @@ export const isStrategyCompatible = (strategyValue: string, odataType: string): 
     const strategy = ALL_STRATEGIES.find(s => s.value === strategyValue);
     if (!strategy) return false;
     if (!strategy.allowedTypes) return true;
-    if (['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.Byte'].includes(odataType) && strategy.value === 'number.int') return true;
+    
+    // Relaxed check for integers/bytes mapping to number.int
+    const integerTypes = ['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.Byte', 'Edm.SByte'];
+    if (integerTypes.includes(odataType) && strategy.value === 'number.int') return true;
+    if (integerTypes.includes(odataType) && strategy.type === 'custom.age') return true;
+    
     return strategy.allowedTypes.includes(odataType);
 };
 
@@ -59,19 +64,13 @@ export const flattenEntityProperties = (
         const currentPath = prefix ? `${prefix}.${p.name}` : p.name;
         
         // 查找是否为 ComplexType
-        // ComplexType 的名称通常不带命名空间 (Metadata 解析时可能带了)
-        // 这里的 p.type 通常是 Namespace.ComplexTypeName，我们需要匹配 schema.complexTypes 中的 Name
         const typeName = p.type.split('.').pop();
-        
-        // 优先在 ComplexTypes 中查找
         const complexType = schema.complexTypes.find(ct => ct.name === typeName) || 
-                            schema.entities.find(e => e.name === typeName && e.keys.length === 0); // 有些服务把 ComplexType 放在 EntityType 标签下但没有Key
+                            schema.entities.find(e => e.name === typeName && e.keys.length === 0);
 
         if (complexType) {
-            // 如果是复杂类型，递归展开
             results = results.concat(flattenEntityProperties(complexType, schema, currentPath, depth + 1));
         } else {
-            // 基本类型，直接添加
             results.push({ path: currentPath, property: p });
         }
     });
@@ -82,21 +81,28 @@ export const suggestStrategy = (prop: EntityProperty): string => {
     const name = prop.name.toLowerCase();
     const type = prop.type;
     
+    // 1. Exact Name Matches (High Priority)
+    if (name.includes('age') && (['Edm.Byte', 'Edm.SByte', 'Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.String'].includes(type))) {
+        return 'custom.age';
+    }
+
+    // 2. Type Matches
     if (type === 'Edm.Boolean') return 'datatype.boolean';
     if (type === 'Edm.Guid') return 'string.uuid';
     if (type.includes('Date')) return 'date.recent';
-    if (['Edm.Int16', 'Edm.Int32', 'Edm.Int64'].includes(type)) return 'number.int';
+    
+    // Updated: Include Byte/SByte in number suggestions
+    if (['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.Byte', 'Edm.SByte'].includes(type)) return 'number.int';
     if (['Edm.Decimal', 'Edm.Double', 'Edm.Single'].includes(type)) return 'commerce.price';
     
+    // 3. String Semantic Matches
     if (type === 'Edm.String') {
-        // Address specific suggestions
         if (name === 'street' || name.includes('street')) return 'location.streetAddress';
         if (name === 'city' || name.includes('city')) return 'location.city';
         if (name === 'zip' || name.includes('zip') || name.includes('postal')) return 'location.zipCode';
         if (name === 'country' || name.includes('country')) return 'location.country';
         if (name === 'state' || name.includes('state') || name.includes('province')) return 'location.state';
         
-        // Common fields
         if (name.includes('email')) return 'internet.email';
         if (name.includes('phone')) return 'phone.number';
         if (name.includes('url')) return 'internet.url';
@@ -109,6 +115,7 @@ export const suggestStrategy = (prop: EntityProperty): string => {
         if (name.includes('id') || name.includes('key')) return 'string.uuid';
         return 'lorem.word';
     }
+    
     return 'custom.null';
 };
 
@@ -118,6 +125,13 @@ export const generateValue = (strategyValue: string, prop: EntityProperty, index
 
     if (strategy.type === 'custom.null') return null;
     if (strategy.type === 'custom.empty') return "";
+    
+    // Age Logic: 18-90
+    if (strategy.type === 'custom.age') {
+        const age = Math.floor(Math.random() * (90 - 18 + 1)) + 18;
+        return enforceConstraints(age, prop);
+    }
+
     if (strategy.type === 'custom.increment') {
         const conf = incrementConfig || { start: 1, step: 1, prefix: '', suffix: '' };
         const numVal = conf.start + (index * conf.step);
@@ -152,8 +166,20 @@ const enforceConstraints = (val: any, prop: EntityProperty): any => {
     if (['Edm.Int16', 'Edm.Int32', 'Edm.Int64', 'Edm.Byte', 'Edm.SByte'].includes(prop.type)) {
         let num = typeof val === 'number' ? val : parseInt(val);
         if (isNaN(num)) return 0;
-        if (prop.type === 'Edm.Byte') num = Math.abs(num) % 256;
-        else if (prop.type === 'Edm.Int16') { if (num > 32767) num = 32767; if (num < -32768) num = -32768; }
+        
+        // Byte Constraints
+        if (prop.type === 'Edm.Byte') {
+             num = Math.abs(num) % 256; 
+        }
+        else if (prop.type === 'Edm.SByte') {
+             // Simple clamp for signed byte -128 to 127
+             if (num > 127) num = 127;
+             if (num < -128) num = -128;
+        }
+        else if (prop.type === 'Edm.Int16') { 
+            if (num > 32767) num = 32767; 
+            if (num < -32768) num = -32768; 
+        }
         return Math.floor(num);
     }
     if (['Edm.Decimal', 'Edm.Double', 'Edm.Single'].includes(prop.type)) {
