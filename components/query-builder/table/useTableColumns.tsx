@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Checkbox } from "@nextui-org/checkbox";
@@ -110,8 +111,8 @@ export const useTableColumns = ({
             maxSize: 100,
         });
 
-        // 获取所有 Key，排除元数据和选中标记
-        const rawKeys = Object.keys(data[0]).filter(key => key !== '__metadata' && key !== '__selected');
+        // 获取所有 Key，排除内部字段 (以 __ 开头，例如 __metadata, __selected, __id)
+        const rawKeys = Object.keys(data[0]).filter(key => !key.startsWith('__'));
         
         // 过滤：排除导航属性 (Navigation Properties) 和 纯 Deferred 对象
         const dataKeys = rawKeys.filter(key => {

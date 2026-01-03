@@ -132,7 +132,8 @@ const MockDataGenerator: React.FC<Props> = ({ url, version, schema, isDark = tru
     const num = parseInt(count) || 5;
     
     const newData = Array.from({ length: num }).map((_, i) => {
-      const row: any = { id: i, __selected: true };
+      // Change 'id' to '__id' to mark it as internal field
+      const row: any = { __id: i, __selected: true };
       
       // 遍历所有扁平化配置，构建嵌套对象
       Object.values(configs).forEach(conf => {

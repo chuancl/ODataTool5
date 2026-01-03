@@ -1,3 +1,4 @@
+
 import * as XLSX from 'xlsx';
 import { isExpandableData } from './utils';
 
@@ -48,7 +49,7 @@ const hasDeepSelection = (data: any): boolean => {
         
         // 2. 检查子属性 (Navigation Properties)
         return Object.entries(data).some(([key, val]) => {
-            if (key === '__metadata' || key === '__deferred' || key === '__selected') return false;
+            if (key.startsWith('__')) return false;
             // 只有可展开的数据才可能包含子选中项
             if (isExpandableData(val)) {
                 return hasDeepSelection(val);
@@ -109,7 +110,8 @@ export const exportToExcel = (allRootData: any[], defaultRootName: string = 'Mai
             
             // 遍历属性：同时负责 "构建当前行数据" 和 "发现子任务"
             Object.entries(row).forEach(([key, val]) => {
-                if (key === '__metadata' || key === '__deferred' || key === '__selected') return;
+                // 排除所有内部字段
+                if (key.startsWith('__')) return;
 
                 if (isExpandableData(val)) {
                     // === 处理嵌套/关联数据 ===

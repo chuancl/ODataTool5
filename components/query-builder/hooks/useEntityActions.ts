@@ -205,10 +205,14 @@ export const useEntityActions = (
         
         // 构造任务对象
         const tasks: (EntityContextTask & { changes?: any })[] = newItems.map(item => {
-             // 清理 UI 选中状态
-             const cleanItem = { ...item };
-             delete cleanItem.__selected;
-             delete cleanItem.id; // Usually local ID in mock table
+             // 清理 UI 选中状态和内部字段
+             const cleanItem: any = {};
+             Object.entries(item).forEach(([k, v]) => {
+                 // 移除所有以 __ 开头的内部字段 (e.g., __selected, __id, __metadata)
+                 if (!k.startsWith('__')) {
+                     cleanItem[k] = v;
+                 }
+             });
 
              const payload = buildUpdatePayload(null, cleanItem, version, schema, currentSchema);
              return {
