@@ -43,13 +43,37 @@ export const isStrategyCompatible = (strategyValue: string, odataType: string): 
     return strategy.allowedTypes.includes(odataType);
 };
 
-export const flattenEntityProperties = (entity: EntityType, schema: ParsedSchema, prefix: string = ''): { path: string, property: EntityProperty }[] => {
+// 递归扁平化实体属性，自动展开 ComplexType
+export const flattenEntityProperties = (
+    entity: EntityType, 
+    schema: ParsedSchema, 
+    prefix: string = '',
+    depth: number = 0
+): { path: string, property: EntityProperty }[] => {
+    // 递归深度保护
+    if (depth > 5) return [];
+
     let results: { path: string, property: EntityProperty }[] = [];
+    
     entity.properties.forEach(p => {
         const currentPath = prefix ? `${prefix}.${p.name}` : p.name;
-        const complexType = schema.entities.find(e => e.name === p.type.split('.').pop());
-        if (complexType) results = results.concat(flattenEntityProperties(complexType, schema, currentPath));
-        else results.push({ path: currentPath, property: p });
+        
+        // 查找是否为 ComplexType
+        // ComplexType 的名称通常不带命名空间 (Metadata 解析时可能带了)
+        // 这里的 p.type 通常是 Namespace.ComplexTypeName，我们需要匹配 schema.complexTypes 中的 Name
+        const typeName = p.type.split('.').pop();
+        
+        // 优先在 ComplexTypes 中查找
+        const complexType = schema.complexTypes.find(ct => ct.name === typeName) || 
+                            schema.entities.find(e => e.name === typeName && e.keys.length === 0); // 有些服务把 ComplexType 放在 EntityType 标签下但没有Key
+
+        if (complexType) {
+            // 如果是复杂类型，递归展开
+            results = results.concat(flattenEntityProperties(complexType, schema, currentPath, depth + 1));
+        } else {
+            // 基本类型，直接添加
+            results.push({ path: currentPath, property: p });
+        }
     });
     return results;
 };
@@ -57,12 +81,22 @@ export const flattenEntityProperties = (entity: EntityType, schema: ParsedSchema
 export const suggestStrategy = (prop: EntityProperty): string => {
     const name = prop.name.toLowerCase();
     const type = prop.type;
+    
     if (type === 'Edm.Boolean') return 'datatype.boolean';
     if (type === 'Edm.Guid') return 'string.uuid';
     if (type.includes('Date')) return 'date.recent';
     if (['Edm.Int16', 'Edm.Int32', 'Edm.Int64'].includes(type)) return 'number.int';
-    if (['Edm.Decimal', 'Edm.Double'].includes(type)) return 'commerce.price';
+    if (['Edm.Decimal', 'Edm.Double', 'Edm.Single'].includes(type)) return 'commerce.price';
+    
     if (type === 'Edm.String') {
+        // Address specific suggestions
+        if (name === 'street' || name.includes('street')) return 'location.streetAddress';
+        if (name === 'city' || name.includes('city')) return 'location.city';
+        if (name === 'zip' || name.includes('zip') || name.includes('postal')) return 'location.zipCode';
+        if (name === 'country' || name.includes('country')) return 'location.country';
+        if (name === 'state' || name.includes('state') || name.includes('province')) return 'location.state';
+        
+        // Common fields
         if (name.includes('email')) return 'internet.email';
         if (name.includes('phone')) return 'phone.number';
         if (name.includes('url')) return 'internet.url';
@@ -72,8 +106,6 @@ export const suggestStrategy = (prop: EntityProperty): string => {
             if (name.includes('product')) return 'commerce.productName';
             return 'person.fullName';
         }
-        if (name.includes('city')) return 'location.city';
-        if (name.includes('country')) return 'location.country';
         if (name.includes('id') || name.includes('key')) return 'string.uuid';
         return 'lorem.word';
     }

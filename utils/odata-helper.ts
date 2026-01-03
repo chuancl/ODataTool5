@@ -1,5 +1,4 @@
 
-
 export type ODataVersion = 'V2' | 'V3' | 'V4' | 'Unknown';
 
 export interface EntityProperty {
@@ -36,6 +35,7 @@ export interface EntitySet {
 
 export interface ParsedSchema {
     entities: EntityType[];
+    complexTypes: EntityType[]; // Treat ComplexTypes structurally same as EntityType (minus keys)
     entitySets: EntitySet[];
     namespace: string;
 }
@@ -69,12 +69,33 @@ export const detectODataVersion = async (urlOrXml: string, isXmlContent: boolean
     if (text.includes('Version="2.0"')) return 'V2';
     if (text.includes('Version="3.0"')) return 'V3';
     
-    // 如果是 fetch 响应头判断逻辑比较复杂，这里主要依赖 XML 内容判断
     return 'Unknown';
   } catch (e) {
     console.error("Failed to detect OData version", e);
     return 'Unknown';
   }
+};
+
+// Helper: Parse Properties (Shared by EntityType and ComplexType)
+const parseProperties = (element: Element): EntityProperty[] => {
+    const properties: EntityProperty[] = [];
+    const props = element.getElementsByTagName("Property");
+    for (let p = 0; p < props.length; p++) {
+        const propNode = props[p];
+        properties.push({
+            name: propNode.getAttribute("Name") || "",
+            type: propNode.getAttribute("Type") || "",
+            nullable: propNode.getAttribute("Nullable") !== "false",
+            maxLength: propNode.getAttribute("MaxLength") ? parseInt(propNode.getAttribute("MaxLength")!) : undefined,
+            fixedLength: propNode.getAttribute("FixedLength") === "true",
+            precision: propNode.getAttribute("Precision") ? parseInt(propNode.getAttribute("Precision")!) : undefined,
+            scale: propNode.getAttribute("Scale") ? parseInt(propNode.getAttribute("Scale")!) : undefined,
+            unicode: propNode.getAttribute("Unicode") !== "false",
+            defaultValue: propNode.getAttribute("DefaultValue") || undefined,
+            concurrencyMode: propNode.getAttribute("ConcurrencyMode") || undefined
+        });
+    }
+    return properties;
 };
 
 // 2. 解析 Metadata
@@ -83,7 +104,7 @@ export const parseMetadataToSchema = (xmlText: string): ParsedSchema => {
   const doc = parser.parseFromString(xmlText, "application/xml");
   const schemas = doc.getElementsByTagName("Schema"); 
   
-  if (!schemas || schemas.length === 0) return { entities: [], entitySets: [], namespace: '' };
+  if (!schemas || schemas.length === 0) return { entities: [], complexTypes: [], entitySets: [], namespace: '' };
 
   const schema = schemas[0];
   const namespace = schema.getAttribute("Namespace") || "";
@@ -150,6 +171,18 @@ export const parseMetadataToSchema = (xmlText: string): ParsedSchema => {
       }
   }
 
+  // 解析 ComplexTypes (新增)
+  const complexTypes: EntityType[] = [];
+  const complexTypeNodes = schema.getElementsByTagName("ComplexType");
+  for (let i = 0; i < complexTypeNodes.length; i++) {
+      const ct = complexTypeNodes[i];
+      const name = ct.getAttribute("Name") || "Unknown";
+      const properties = parseProperties(ct);
+      // Complex Types typically don't have keys or navigation properties (in V2/V3), but V4 allows nav props.
+      // Keeping structure compatible with EntityType for simpler handling.
+      complexTypes.push({ name, keys: [], properties, navigationProperties: [] });
+  }
+
   // 解析 EntityTypes
   const entities: EntityType[] = [];
   const entityTypes = schema.getElementsByTagName("EntityType");
@@ -165,23 +198,7 @@ export const parseMetadataToSchema = (xmlText: string): ParsedSchema => {
         for (let k = 0; k < propRefs.length; k++) keys.push(propRefs[k].getAttribute("Name") || "");
     }
 
-    const properties: EntityProperty[] = [];
-    const props = et.getElementsByTagName("Property");
-    for (let p = 0; p < props.length; p++) {
-        const propNode = props[p];
-        properties.push({
-            name: propNode.getAttribute("Name") || "",
-            type: propNode.getAttribute("Type") || "",
-            nullable: propNode.getAttribute("Nullable") !== "false",
-            maxLength: propNode.getAttribute("MaxLength") ? parseInt(propNode.getAttribute("MaxLength")!) : undefined,
-            fixedLength: propNode.getAttribute("FixedLength") === "true",
-            precision: propNode.getAttribute("Precision") ? parseInt(propNode.getAttribute("Precision")!) : undefined,
-            scale: propNode.getAttribute("Scale") ? parseInt(propNode.getAttribute("Scale")!) : undefined,
-            unicode: propNode.getAttribute("Unicode") !== "false",
-            defaultValue: propNode.getAttribute("DefaultValue") || undefined,
-            concurrencyMode: propNode.getAttribute("ConcurrencyMode") || undefined
-        });
-    }
+    const properties = parseProperties(et);
 
     const navProps: EntityType['navigationProperties'] = [];
     const navs = et.getElementsByTagName("NavigationProperty");
@@ -252,10 +269,11 @@ export const parseMetadataToSchema = (xmlText: string): ParsedSchema => {
     entities.push({ name, keys, properties, navigationProperties: navProps });
   }
 
-  return { entities, entitySets, namespace };
+  return { entities, complexTypes, entitySets, namespace };
 };
 
-// 3. SAPUI5 Code Generator
+// ... (Rest of the file remains unchanged)
+// SAPUI5 Code Generator, C# Code Generator, Java Code Generator...
 export const generateSAPUI5Code = (op: 'read'|'delete'|'create'|'update', es: string, p: any, v: ODataVersion) => {
     let code = `// SAPUI5 OData ${v} Code for ${op} on ${es}\n`;
     code += `var oModel = this.getView().getModel();\n`;
