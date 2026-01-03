@@ -8,7 +8,8 @@ import ReactFlow, {
   MarkerType,
   Edge,
   Node,
-  ReactFlowProvider
+  ReactFlowProvider,
+  useReactFlow // Added useReactFlow for viewport control
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import ELK from 'elkjs/lib/elk.bundled.js';
@@ -60,6 +61,9 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
   const [showXml, setShowXml] = useState(false); // New: Toggle Raw XML View
   const [activeEntityIds, setActiveEntityIds] = useState<string[]>([]); // Global Active Entity IDs for Popovers
   const [isProcessingLayout, setIsProcessingLayout] = useState(false);
+
+  // React Flow Hooks
+  const { fitView } = useReactFlow();
 
   // CodeMirror Theme
   const editorTheme = isDark ? vscodeDark : githubLight;
@@ -139,7 +143,8 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
       performLayoutUpdate(draggedNodes);
   }, [performLayoutUpdate]);
 
-  useEffect(() => {
+  // Generate Diagram Layout (Extracted for Reset functionality)
+  const generateDiagram = useCallback(async () => {
     if (!schema || !schema.entities) {
         setNodes([]);
         setEdges([]);
@@ -148,8 +153,7 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
     
     setIsProcessingLayout(true);
 
-    const generateDiagram = async () => {
-      try {
+    try {
         const { entities, namespace } = schema;
         
         if (entities.length === 0) {
@@ -284,15 +288,17 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
 
         setNodes(finalNodes);
         setEdges(finalEdges);
-      } catch (err) {
+    } catch (err) {
         console.error("ER Diagram generation failed", err);
-      } finally {
+    } finally {
         setIsProcessingLayout(false);
-      }
-    };
+    }
+  }, [schema, setNodes, setEdges]);
 
+  // Initial load
+  useEffect(() => {
     generateDiagram();
-  }, [schema]); // Only runs when schema object changes (fetched once by parent)
+  }, [generateDiagram]);
 
   // 处理节点点击事件：多选/反选逻辑
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
@@ -387,10 +393,19 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlCon
     }));
   }, [activeEntityIds, setNodes]);
 
-  const resetView = () => {
+  const resetView = useCallback(async () => {
      setHighlightedIds(new Set());
      setActiveEntityIds([]); 
-  };
+     
+     // Recalculate layout from scratch
+     await generateDiagram();
+     
+     // Reset Viewport (Zoom/Pan)
+     // Add a small delay to ensure nodes are rendered in their new positions before fitting
+     setTimeout(() => {
+         fitView({ duration: 800, padding: 0.1 });
+     }, 100);
+  }, [generateDiagram, fitView]);
 
   // Helper for XML View
   const handleDownloadXml = () => {
