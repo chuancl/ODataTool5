@@ -41,7 +41,7 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
         return defaults;
     });
 
-    // 当 value 变化时（例如重置或自动匹配），确保对应的分类被展开，否则 Select 无法渲染该选项
+    // 当 value 变化时（例如重置或自动匹配），同步更新 expandedCategories 状态
     useEffect(() => {
         if (selectedStrategy && !expandedCategories.has(selectedStrategy.category)) {
             setExpandedCategories(prev => {
@@ -66,7 +66,11 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
         });
 
         categories.forEach(cat => {
-            const isExpanded = expandedCategories.has(cat);
+            // 关键修正：如果当前选中的策略属于该分类，强制视为展开。
+            // 这样能保证在 Select 初次渲染时，选中的 Item 一定存在于列表中，从而让 NextUI 正确计算 Scroll 位置。
+            const isSelectedCategory = selectedStrategy?.category === cat;
+            const isExpanded = expandedCategories.has(cat) || isSelectedCategory;
+
             items.push({
                 key: `CAT_${cat}`,
                 type: 'category',
@@ -93,11 +97,14 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
         });
 
         return items;
-    }, [grouped, expandedCategories, odataType]);
+    }, [grouped, expandedCategories, odataType, selectedStrategy]);
 
     const isCurrentCompatible = selectedStrategy ? isStrategyCompatible(value, odataType) : true;
 
     const toggleCategory = (catName: string) => {
+        // 如果该分类包含当前选中项，则不允许折叠 (保持可见性)
+        if (selectedStrategy?.category === catName) return;
+
         setExpandedCategories(prev => {
             const next = new Set(prev);
             if (next.has(catName)) next.delete(catName);
@@ -135,6 +142,9 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
         >
             {(item) => {
                 if (item.type === 'category') {
+                    // 如果该分类包含当前选中项，禁用折叠交互样式
+                    const isForcedOpen = selectedStrategy?.category === item.label;
+
                     return (
                         <SelectItem 
                             key={item.key} 
@@ -143,7 +153,7 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
                             isReadOnly
                         >
                             <div 
-                                className="flex items-center gap-2 w-full h-full py-2 px-3 cursor-pointer"
+                                className={`flex items-center gap-2 w-full h-full py-2 px-3 ${isForcedOpen ? 'cursor-default opacity-80' : 'cursor-pointer'}`}
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -151,9 +161,11 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
                                 }}
                             >
                                 <div className="text-default-400">
+                                    {/* 如果强制展开，显示固定图标或不显示折叠状态 */}
                                     {item.isExpanded ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
                                 </div>
                                 <span className="text-[11px] uppercase tracking-wider select-none">{item.label}</span>
+                                {isForcedOpen && <span className="text-[9px] text-default-400 ml-auto font-normal lowercase">(active)</span>}
                             </div>
                         </SelectItem>
                     );
