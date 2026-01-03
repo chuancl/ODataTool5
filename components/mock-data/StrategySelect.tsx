@@ -26,8 +26,8 @@ interface FlatItem {
 }
 
 export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange, odataType, label }) => {
-    // 管理展开的类别
-    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['Custom (自定义)', 'Person (人)'])); // 默认展开常用
+    // 管理展开的类别 (默认展开常用)
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['Custom (自定义)', 'Person (人)', 'Commerce (商业)'])); 
 
     const grouped = useMemo(() => getGroupedStrategies(), []);
     
@@ -35,7 +35,7 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
     const flatItems = useMemo(() => {
         const items: FlatItem[] = [];
         
-        // 排序 Categories (Custom first, then alphabetical)
+        // 排序 Categories
         const categories = Object.keys(grouped).sort((a, b) => {
             if (a.startsWith('Custom')) return -1;
             if (b.startsWith('Custom')) return 1;
@@ -73,29 +73,17 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
         return items;
     }, [grouped, expandedCategories, odataType]);
 
-    // 获取当前选中的完整对象
     const selectedStrategy = ALL_STRATEGIES.find(s => s.value === value);
     const isCurrentCompatible = selectedStrategy ? isStrategyCompatible(value, odataType) : true;
 
-    // 处理选择变更
-    const handleSelectionChange = (keys: any) => {
-        const selectedKey = Array.from(keys)[0] as string;
-        if (!selectedKey) return;
-
-        // 如果点击的是类别 -> 切换展开
-        if (selectedKey.startsWith('CAT_')) {
-            const catName = selectedKey.replace('CAT_', '');
-            setExpandedCategories(prev => {
-                const next = new Set(prev);
-                if (next.has(catName)) next.delete(catName);
-                else next.add(catName);
-                return next;
-            });
-            // 不触发 onChange，保持原值
-        } else {
-            // 点击的是策略 -> 选中
-            onChange(selectedKey);
-        }
+    // 切换分类展开状态
+    const toggleCategory = (catName: string) => {
+        setExpandedCategories(prev => {
+            const next = new Set(prev);
+            if (next.has(catName)) next.delete(catName);
+            else next.add(catName);
+            return next;
+        });
     };
 
     return (
@@ -104,7 +92,12 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
             size="sm" 
             variant="faded" 
             selectedKeys={selectedStrategy ? [selectedStrategy.value] : []}
-            onSelectionChange={handleSelectionChange}
+            // 这里的 onSelectionChange 只处理实际策略的选中
+            // 分类的点击通过 onClick 拦截并阻止冒泡，不会触发 selectionChange
+            onSelectionChange={(keys) => {
+                const k = Array.from(keys)[0] as string;
+                if (k && !k.startsWith('CAT_')) onChange(k);
+            }}
             classNames={{ 
                 trigger: "h-8 min-h-8 px-2", 
                 value: `text-[11px] ${!isCurrentCompatible ? 'text-warning-600 font-medium' : ''}` 
@@ -122,24 +115,36 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
         >
             {(item) => {
                 if (item.type === 'category') {
+                    // 类别行：点击整行切换展开，且阻止冒泡以防止 Dropdown 关闭
                     return (
                         <SelectItem 
                             key={item.key} 
-                            value={item.key}
                             textValue={item.label}
-                            className="font-bold text-default-600 bg-default-50 sticky top-0 z-10"
+                            className="font-bold text-default-600 bg-default-50 sticky top-0 z-10 p-0 rounded-none border-b border-divider/50 data-[hover=true]:bg-default-100 outline-none"
+                            isReadOnly // 标记为只读，避免 NextUI 处理为可选项
                         >
-                            <div className="flex items-center gap-1">
-                                {item.isExpanded ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
-                                <span className="text-[11px] uppercase tracking-wider">{item.label}</span>
+                            <div 
+                                className="flex items-center gap-2 w-full h-full py-2 px-3 cursor-pointer"
+                                onClick={(e) => {
+                                    // 核心修复：阻止事件冒泡到 Select 组件，防止菜单关闭
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleCategory(item.label);
+                                }}
+                            >
+                                <div className="text-default-400">
+                                    {item.isExpanded ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
+                                </div>
+                                <span className="text-[11px] uppercase tracking-wider select-none">{item.label}</span>
                             </div>
                         </SelectItem>
                     );
                 }
                 
+                // 策略行：正常渲染，点击触发选择
                 return (
                     <SelectItem key={item.key} value={item.key} textValue={item.label}>
-                        <div className="flex justify-between items-center w-full gap-2 pl-4">
+                        <div className="flex justify-between items-center w-full gap-2 pl-6">
                             <span className={`text-[11px] ${!item.isCompatible ? 'text-default-400 line-through decoration-default-300' : ''}`}>
                                 {item.label}
                             </span>
