@@ -22,6 +22,7 @@ const DashboardContent: React.FC = () => {
   const [odataVersion, setOdataVersion] = useState<ODataVersion>('Unknown');
   const [isValidating, setIsValidating] = useState(false);
   const [schema, setSchema] = useState<ParsedSchema | null>(null);
+  const [rawMetadataXml, setRawMetadataXml] = useState<string>(''); // New state for raw XML
   
   // 增加 Tab 状态控制
   const [activeTab, setActiveTab] = useState<string>('er');
@@ -54,6 +55,7 @@ const DashboardContent: React.FC = () => {
     }
     setIsValidating(true);
     setSchema(null); // Reset schema during load
+    setRawMetadataXml(''); // Reset raw XML
 
     try {
         // 1. 统一获取 Metadata XML
@@ -62,6 +64,7 @@ const DashboardContent: React.FC = () => {
         if (!res.ok) throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
         
         const xmlText = await res.text();
+        setRawMetadataXml(xmlText); // Store raw XML
         
         // 2. 统一检测版本 (基于 XML 内容)
         const ver = await detectODataVersion(xmlText, true);
@@ -177,7 +180,7 @@ const DashboardContent: React.FC = () => {
               <div className="flex-1 w-full h-full p-0 overflow-hidden relative bg-content1">
                   {/* ER Diagram View */}
                   <div className="w-full h-full absolute inset-0" style={{ display: activeTab === 'er' ? 'block' : 'none', visibility: activeTab === 'er' ? 'visible' : 'hidden' }}>
-                     <ODataERDiagram url={url} schema={schema} isLoading={isValidating} />
+                     <ODataERDiagram url={url} schema={schema} isLoading={isValidating} xmlContent={rawMetadataXml} isDark={isDark} />
                   </div>
 
                   {/* Query Builder View */}

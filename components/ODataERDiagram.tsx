@@ -16,11 +16,17 @@ import { ParsedSchema } from '@/utils/odata-helper';
 import { Button } from "@nextui-org/button";
 import { Spinner } from "@nextui-org/spinner";
 import { Switch } from "@nextui-org/switch";
-import { Zap } from 'lucide-react';
+import { Zap, FileCode, Download, Copy } from 'lucide-react';
 import { calculateDynamicLayout } from './er-diagram/layout';
 import { EntityNode } from './er-diagram/EntityNode';
 import { DiagramContext } from './er-diagram/DiagramContext';
 import { generateHashCode, getColor } from './er-diagram/utils';
+
+// CodeMirror imports for XML view
+import CodeMirror from '@uiw/react-codemirror';
+import { xml } from '@codemirror/lang-xml';
+import { vscodeDark } from '@uiw/codemirror-theme-vscode';
+import { githubLight } from '@uiw/codemirror-theme-github';
 
 const elk = new ELK();
 
@@ -30,6 +36,8 @@ interface Props {
   url: string;
   schema: ParsedSchema | null;
   isLoading: boolean;
+  xmlContent?: string;
+  isDark?: boolean;
 }
 
 // --------------------------------------------------------
@@ -44,12 +52,16 @@ const ODataERDiagram: React.FC<Props> = (props) => {
 };
 
 
-const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading }) => {
+const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading, xmlContent, isDark = true }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [isPerformanceMode, setIsPerformanceMode] = useState(false); // 默认关闭性能模式
+  const [showXml, setShowXml] = useState(false); // New: Toggle Raw XML View
   const [activeEntityIds, setActiveEntityIds] = useState<string[]>([]); // Global Active Entity IDs for Popovers
   const [isProcessingLayout, setIsProcessingLayout] = useState(false);
+
+  // CodeMirror Theme
+  const editorTheme = isDark ? vscodeDark : githubLight;
 
   // Context Helpers
   const addActiveEntity = useCallback((id: string) => {
@@ -363,6 +375,23 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading }) => {
      setActiveEntityIds([]); 
   };
 
+  // Helper for XML View
+  const handleDownloadXml = () => {
+      if (!xmlContent) return;
+      const blob = new Blob([xmlContent], { type: 'application/xml' });
+      const u = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = u; link.download = 'metadata.xml';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(u);
+  };
+
+  const handleCopyXml = () => {
+      if (xmlContent) navigator.clipboard.writeText(xmlContent);
+  };
+
   return (
     <div className="w-full h-full relative bg-content2/30">
       {(isLoading || isProcessingLayout) && (
@@ -380,37 +409,90 @@ const ODataERDiagramContent: React.FC<Props> = ({ url, schema, isLoading }) => {
         </div>
       )}
 
+      {/* Controls Overlay (Top Right) */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end">
+        {/* Switch for Diagram / XML View */}
         <div className="flex items-center gap-2 bg-content1/90 backdrop-blur-md p-1.5 px-3 rounded-lg border border-divider shadow-sm">
             <span className="text-xs font-medium text-default-500 flex items-center gap-1">
-                <Zap size={14} className={isPerformanceMode ? "text-warning" : "text-default-400"} fill={isPerformanceMode ? "currentColor" : "none"} />
-                性能模式
+                <FileCode size={14} className={showXml ? "text-primary" : "text-default-400"} />
+                显示原始文件
             </span>
-            <Switch size="sm" isSelected={isPerformanceMode} onValueChange={setIsPerformanceMode} aria-label="性能模式" />
+            <Switch size="sm" isSelected={showXml} onValueChange={setShowXml} aria-label="显示原始文件" />
         </div>
-        <Button size="sm" color="primary" variant="flat" onPress={resetView}>重置视图</Button>
+
+        {/* Other controls hidden when showing XML to avoid clutter */}
+        {!showXml && (
+            <>
+                <div className="flex items-center gap-2 bg-content1/90 backdrop-blur-md p-1.5 px-3 rounded-lg border border-divider shadow-sm">
+                    <span className="text-xs font-medium text-default-500 flex items-center gap-1">
+                        <Zap size={14} className={isPerformanceMode ? "text-warning" : "text-default-400"} fill={isPerformanceMode ? "currentColor" : "none"} />
+                        性能模式
+                    </span>
+                    <Switch size="sm" isSelected={isPerformanceMode} onValueChange={setIsPerformanceMode} aria-label="性能模式" />
+                </div>
+                <Button size="sm" color="primary" variant="flat" onPress={resetView}>重置视图</Button>
+            </>
+        )}
       </div>
-      
-      <DiagramContext.Provider value={{ activeEntityIds, addActiveEntity, removeActiveEntity, switchActiveEntity }}>
-        <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onNodeDrag={onNodeDrag}
-            onNodeDragStop={onNodeDragStop}
-            nodeTypes={nodeTypes}
-            onNodeClick={onNodeClick}
-            onPaneClick={onPaneClick}
-            fitView
-            attributionPosition="bottom-right"
-            minZoom={0.1}
-            maxZoom={1.5}
-        >
-            <Controls className="bg-content1 border border-divider shadow-sm" />
-            <Background color="#888" gap={24} size={1} />
-        </ReactFlow>
-      </DiagramContext.Provider>
+
+      {/* --- XML Viewer View --- */}
+      <div 
+        className="w-full h-full absolute inset-0 bg-content1 z-0 flex flex-col"
+        style={{ display: showXml ? 'flex' : 'none' }}
+      >
+          {/* XML Toolbar */}
+          <div className="p-2 border-b border-divider flex justify-between items-center bg-content2/50 backdrop-blur-md shrink-0">
+             <span className="text-xs font-bold text-default-500 px-2 flex items-center gap-2">
+                 <FileCode size={14}/> Metadata.xml
+             </span>
+             <div className="flex gap-1 mr-40"> {/* Right margin to avoid overlap with controls */}
+                 <Button isIconOnly size="sm" variant="light" onPress={handleDownloadXml} title="下载 XML"><Download size={14}/></Button>
+                 <Button isIconOnly size="sm" variant="light" onPress={handleCopyXml} title="复制 XML"><Copy size={14}/></Button>
+             </div>
+          </div>
+          
+          {/* CodeMirror Editor */}
+          <div className="flex-1 overflow-hidden relative text-sm">
+             <CodeMirror
+                value={xmlContent || '<!-- No XML Content Available -->'}
+                height="100%"
+                className="h-full [&_.cm-scroller]:overflow-scroll"
+                extensions={[xml()]}
+                theme={editorTheme}
+                readOnly={true}
+                editable={false}
+                basicSetup={{
+                    lineNumbers: true,
+                    foldGutter: true,
+                    highlightActiveLine: true
+                }}
+            />
+          </div>
+      </div>
+
+      {/* --- Diagram View --- */}
+      <div className="w-full h-full" style={{ display: !showXml ? 'block' : 'none' }}>
+        <DiagramContext.Provider value={{ activeEntityIds, addActiveEntity, removeActiveEntity, switchActiveEntity }}>
+            <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onNodeDrag={onNodeDrag}
+                onNodeDragStop={onNodeDragStop}
+                nodeTypes={nodeTypes}
+                onNodeClick={onNodeClick}
+                onPaneClick={onPaneClick}
+                fitView
+                attributionPosition="bottom-right"
+                minZoom={0.1}
+                maxZoom={1.5}
+            >
+                <Controls className="bg-content1 border border-divider shadow-sm" />
+                <Background color="#888" gap={24} size={1} />
+            </ReactFlow>
+        </DiagramContext.Provider>
+      </div>
     </div>
   );
 };
