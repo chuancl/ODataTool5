@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Select, SelectItem, Chip, Tooltip } from "@nextui-org/react";
 import { ChevronRight, ChevronDown, AlertTriangle } from 'lucide-react';
 import { 
@@ -28,8 +28,27 @@ interface FlatItem {
 }
 
 export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange, odataType, label }) => {
-    // 默认展开 Custom 和 Person，确保默认选项(如 Null/AutoIncrement) 可见
-    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['Custom (自定义)', 'Person (人物)'])); 
+    const selectedStrategy = useMemo(() => ALL_STRATEGIES.find(s => s.value === value), [value]);
+
+    // 默认展开 Custom 和 Person，以及当前选中值所属的分类
+    const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => {
+        const defaults = new Set(['Custom (自定义)', 'Person (人物)']);
+        if (selectedStrategy) {
+            defaults.add(selectedStrategy.category);
+        }
+        return defaults;
+    });
+
+    // 当 value 变化时（例如重置或自动匹配），确保对应的分类被展开，否则 Select 无法渲染该选项
+    useEffect(() => {
+        if (selectedStrategy && !expandedCategories.has(selectedStrategy.category)) {
+            setExpandedCategories(prev => {
+                const next = new Set(prev);
+                next.add(selectedStrategy.category);
+                return next;
+            });
+        }
+    }, [selectedStrategy]);
 
     const grouped = useMemo(() => getGroupedStrategies(), []);
     
@@ -74,7 +93,6 @@ export const StrategySelect: React.FC<StrategySelectProps> = ({ value, onChange,
         return items;
     }, [grouped, expandedCategories, odataType]);
 
-    const selectedStrategy = ALL_STRATEGIES.find(s => s.value === value);
     const isCurrentCompatible = selectedStrategy ? isStrategyCompatible(value, odataType) : true;
 
     const toggleCategory = (catName: string) => {
